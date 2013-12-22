@@ -51,9 +51,7 @@ public class BindingOptionMap extends HashMap {
      * @param value Option value
      * @return Current option map with modification
      */
-    public BindingOptionMap add(Object key,
-				Object value) {
-
+    public BindingOptionMap add(final Object key, final Object value) {
 	super.put(key, value);
 
 	return this;
@@ -66,7 +64,6 @@ public class BindingOptionMap extends HashMap {
      * @return Current option map with modification
      */
     public BindingOptionMap add(Object key) {
-
 	return this.add(key, Boolean.TRUE);
     } // end of add
 

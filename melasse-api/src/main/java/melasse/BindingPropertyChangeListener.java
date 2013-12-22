@@ -11,15 +11,14 @@ import java.beans.PropertyChangeEvent;
  * @author Cedric Chantepie 
  */
 class BindingPropertyChangeListener 
-    extends BindingListenerSupport 
-    implements PropertyChangeListener {
+    extends BindingListenerSupport implements PropertyChangeListener {
 
     // --- Properties ---
 
     /**
      * Name of watched property
      */
-    private String property = null;
+    private final String property;
 
     /**
      * Allow null change
@@ -35,8 +34,8 @@ class BindingPropertyChangeListener
      * @param setter Setter used to propagate value
      * @param watchedProperty Name of property watched by this listener
      */
-    protected BindingPropertyChangeListener(Setter setter, 
-					    String watchedProperty) {
+    protected BindingPropertyChangeListener(final Setter setter, 
+					    final String watchedProperty) {
 
 	super(setter);
 
@@ -53,8 +52,7 @@ class BindingPropertyChangeListener
     // ---
 
     /**
-     * Sets whether this listener should |propagate|
-     * event for null change.
+     * Sets whether this listener should |propagate| event for null change.
      *
      * @param propagate true if should propagate
      * @see BindingKey#ALLOW_NULL_CHANGE
@@ -67,22 +65,22 @@ class BindingPropertyChangeListener
      * Changes object property, using transformer if given, 
      * from text component value change.
      */
-    public void propertyChange(PropertyChangeEvent evt) {
-	String name = evt.getPropertyName();
+    public void propertyChange(final PropertyChangeEvent evt) {
+	final String name = evt.getPropertyName();
 
 	this.logger.log(Level.FINER,
-			"evt = {0}, name = {1}, watched property = {2}", 
+			"event = {0}, name = {1}, watched property = {2}", 
 			new Object[] { evt, name, this.property });
 
 	if (!this.property.equals(name)) {
+            
 	    this.logger.finer("Skip unwatched property");
 
 	    return;
 	} // end of if
 
 	if (!this.allowNullChange &&
-	    evt.getOldValue() == null &&
-	    evt.getNewValue() == null) {
+	    evt.getOldValue() == null && evt.getNewValue() == null) {
 
 	    this.logger.finer("Skip null change");
 
@@ -91,10 +89,9 @@ class BindingPropertyChangeListener
 
 	// ---
 
-	Object sourceValue = evt.getNewValue();
+	final Object sourceValue = evt.getNewValue();
 
-	this.logger.log(Level.FINER,
-			"sourceValue = {0}", sourceValue );
+	this.logger.log(Level.FINER, "sourceValue = {0}", sourceValue );
 
 	setValue(sourceValue);
     } // end of propertyChange

@@ -14,6 +14,9 @@ import javax.swing.JSpinner;
 
 import javax.swing.text.JTextComponent;
 
+import javax.swing.event.DocumentListener;
+import javax.swing.event.DocumentEvent;
+
 /**
  * Add-listener hook for bindings.
  *
@@ -27,12 +30,12 @@ class BindingPostAddListenerHook
     /**
      * Associated path
      */
-    private Binder.ObjectPath path = null;
+    private final Binder.ObjectPath path;
 
     /**
      * Binding options
      */
-    public BindingOptionMap options = null;
+    public final BindingOptionMap options;
 
     /**
      * Logger
@@ -47,13 +50,13 @@ class BindingPostAddListenerHook
      * @param path First element of associated object path
      * @param options Binding options
      */
-    protected BindingPostAddListenerHook(Binder.ObjectPath path,
-					 BindingOptionMap options) {
+    protected BindingPostAddListenerHook(final Binder.ObjectPath path,
+					 final BindingOptionMap options) {
 
 	this.path = path;
 	this.options = options;
 
-	this.logger = Logger.getLogger(/*LibraSwing*/"Melasse");
+	this.logger = Logger.getLogger("Melasse");
     } // end of <init>
 
     // ---
@@ -61,29 +64,61 @@ class BindingPostAddListenerHook
     /**
      * {@inheritDoc}
      */
-    public void afterAddListeners(ObjectPathElement observedElmt,
-				  final Map<BindingListenerCategory,ArrayList> registry) {
+    public void afterAddListeners(final ObjectPathElement observedElmt, final Map<BindingListenerCategory,ArrayList> registry) {
 
-	this.logger.log(Level.FINER, 
-			"options = {0}, observed element = {1}, associated path = {2}", 
-			new Object[] { options, observedElmt, path });
+	this.logger.log(Level.FINER, "options = {0}, observed element = {1}, associated path = {2}", new Object[] { options, observedElmt, path });
 
-	Object targetObject = observedElmt.getTargetObject();
+	final Object targetObject = observedElmt.getTargetObject();
 
 	this.logger.log(Level.FINER,
 			"target object = {0}", targetObject);
 
-	String property = observedElmt.getProperty();
+	final String property = observedElmt.getProperty();
 
 	this.logger.log(Level.FINER, "property = {0}", property);
 
-	if (((targetObject instanceof TextComponent) ||
-	     (targetObject instanceof JTextComponent)) &&
+	if ((targetObject instanceof TextComponent) &&
 	    "text".equals(property)) {
 
 	    this.logger.fine("Will add text listeners");
 
-	    addTextListeners(observedElmt, registry);
+            final TextComponent textComp = (TextComponent) targetObject;
+            final boolean editable = textComp.isEditable();
+            
+            if (editable) {
+                addTextListeners(observedElmt, registry);
+            } else {
+                // TODO: Workaround - convert text event to property one
+                final BindingTextListener tl = 
+                    new BindingTextListener(textComp);
+
+                textComp.addTextListener(tl);
+
+                addPropertyListeners(observedElmt, registry);
+            } // end of else
+
+	    return;
+	} // end of if
+
+	if ((targetObject instanceof JTextComponent) &&
+	    "text".equals(property)) {
+
+	    this.logger.fine("Will add text listeners");
+
+            final JTextComponent textComp = (JTextComponent) targetObject;
+            final boolean editable = textComp.isEditable();
+            
+            if (editable) {
+                addTextListeners(observedElmt, registry);
+            } else {
+                // Workaround - redirect text event to property change
+                final BindingDocumentListener dl = 
+                    new BindingDocumentListener(textComp);
+
+                textComp.getDocument().addDocumentListener(dl);
+
+                addPropertyListeners(observedElmt, registry);
+            } // end of else
 
 	    return;
 	} // end of if
@@ -349,4 +384,129 @@ class BindingPostAddListenerHook
 	    registry.put(BindingListenerCategory.FOCUS, list);
 	} // end of else
     } // end of addTextListeners
+
+    // --- Inner classes ---
+
+    /**
+     * Base for listener of converted text event.
+     */
+    private abstract class ConvertedTextEventListener<C extends Component> {
+
+        // --- Properties ---
+
+        /**
+         * Text component
+         */
+        protected final C component;
+
+        /**
+         * Text before change
+         */
+        private String text;
+
+        // --- Constructor ---
+
+        /**
+         * Bulk constructor.
+         *
+         * @param component Observed text component
+         */
+        ConvertedTextEventListener(final C component, final String text) {
+            this.component = component;
+            this.text = text;
+        } // end of <init>
+
+        // ---
+
+        /**
+         * Fire property change according document one.
+         */
+        protected void firePropertyChange(final String newText) {
+            java.beans.PropertyChangeEvent event = null;
+
+            synchronized (this) {
+                event = new java.beans.
+                    PropertyChangeEvent(this.component, "text", 
+                                        this.text, newText);
+                
+                this.text = newText;
+            } // end of sync
+
+            for (final java.beans.PropertyChangeListener l : this.component.
+                     getPropertyChangeListeners()) {
+
+                l.propertyChange(event);
+            } // end of for
+        } // end of firePropertyChange
+    } // end of class ConvertedTextEventListener
+
+    /**
+     * Listener for text event - converted as property change event.
+     */
+    private final class BindingTextListener 
+        extends ConvertedTextEventListener<TextComponent>  
+        implements java.awt.event.TextListener {
+
+        // --- Constructors ---
+
+        /**
+         * Bulk constructor.
+         *
+         * @param component Observed text component
+         */
+        BindingTextListener(final TextComponent component) {
+            super(component, component.getText());
+        } // end of <init>
+
+        // ---
+
+        /**
+         * {@inheritDoc}
+         */
+        public void textValueChanged(java.awt.event.TextEvent e) {
+            firePropertyChange(this.component.getText());
+        } // end of textValueChanged
+    } // end of class BindingTextListener
+
+    /**
+     * Listener for document event - converted as property change event.
+     */
+    private final class BindingDocumentListener 
+        extends ConvertedTextEventListener<JTextComponent> 
+        implements javax.swing.event.DocumentListener {
+
+        // --- Constructors ---
+
+        /**
+         * Bulk constructor.
+         *
+         * @param component Observed text component
+         */
+        BindingDocumentListener(final JTextComponent component) {
+            super(component, component.getText());
+        } // end of <init>
+
+        // ---
+
+        /**
+         * {@inheritDoc}
+         */
+        public void insertUpdate(javax.swing.event.DocumentEvent e) {
+            firePropertyChange(this.component.getText());
+        } // end of insertUpdate
+
+        /**
+         * {@inheritDoc}
+         */
+        public void removeUpdate(javax.swing.event.DocumentEvent e) {
+            firePropertyChange(this.component.getText());
+        } // end of removeUpdate
+
+        /**
+         * {@inheritDoc}
+         */
+        public void changedUpdate(javax.swing.event.DocumentEvent e) {
+            firePropertyChange(this.component.getText());
+        } // end of changedUpdate
+    } // end of BindingDocumentListener
 } // end of class BindingPostAddListenerHook
