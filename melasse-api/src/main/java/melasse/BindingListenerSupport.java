@@ -19,7 +19,7 @@ abstract class BindingListenerSupport {
     /**
      * Setter to propagate change
      */
-    private Setter setter = null;
+    protected final Setter setter;
 
     // --- Constructors ---
 
@@ -34,7 +34,7 @@ abstract class BindingListenerSupport {
 	} // end of if
 
 	this.setter = setter;
-	this.logger = Logger.getLogger(/*LibraSwing*/"Melasse");
+	this.logger = Logger.getLogger("Melasse");
 
 	this.logger.log(Level.FINER, "setter = {0}", setter);
     } // end of <init>
@@ -62,7 +62,7 @@ abstract class BindingListenerSupport {
 	/**
 	 * First element of object path
 	 */
-	protected ObjectPathElement pathStart = null;
+	protected final ObjectPathElement pathStart;
 
 	/**
 	 * Logger
@@ -76,7 +76,7 @@ abstract class BindingListenerSupport {
 	 *
 	 * @param pathStart Start of target object path
 	 */
-	public Setter(ObjectPathElement pathStart) {
+	public Setter(final ObjectPathElement pathStart) {
 	    if (pathStart == null) {
 		throw new IllegalArgumentException("Invalid object path: " +
 						   pathStart);
@@ -94,7 +94,7 @@ abstract class BindingListenerSupport {
 	 *
 	 * @param value New value
 	 */
-	public /*synchronized*/void set(Object value) {
+	public /*synchronized*/void set(final Object value) {
 	    this.logger.log(Level.FINER, "value = {0}", value);
 
 	    if (!this.pathStart.setAndTransformValue(value)) {
@@ -132,8 +132,8 @@ abstract class BindingListenerSupport {
 	 * @param pathStart Start of target object path
 	 * @param value Initial value (and current one)
 	 */
-	public ConditionalSetter(ObjectPathElement pathStart,
-				 Object value) {
+	public ConditionalSetter(final ObjectPathElement pathStart,
+				 final Object value) {
 
 	    super(pathStart);
 
@@ -148,9 +148,8 @@ abstract class BindingListenerSupport {
 	 *
 	 * @param value New value, only set if different.
 	 */
-	public void set(Object value) {
-	    this.logger.log(Level.FINER,
-			    "current value = {0}", this.value);
+	public void set(final Object value) {
+	    this.logger.log(Level.FINER, "current value = {0}", this.value);
 
 	    if ((this.value == null && value == null) ||
 		(this.value != null && this.value.equals(value))) {

@@ -292,14 +292,11 @@ class BindingPostAddListenerHook
 
 	    this.logger.finer("Add text listeners for continuous update");
 
-	    BindingListenerSupport.Setter setter = 
+	    final BindingListenerSupport.Setter setter = 
 		new BindingListenerSupport.Setter(this.path.start);
 
-	    BindingKeyListener klistener = 
-		new BindingKeyListener(setter);
-
-	    ArrayList list = registry.
-		get(BindingListenerCategory.KEY);
+	    final BindingKeyListener klistener = new BindingKeyListener(setter);
+	    ArrayList list = registry.get(BindingListenerCategory.KEY);
 
 	    if (list != null) {
 		list.add(klistener);
@@ -318,18 +315,17 @@ class BindingPostAddListenerHook
 
 	this.logger.finer("Add text listeners without continuous update");
 
-	BindingListenerSupport.ConditionalSetter setter = 
+	final BindingListenerSupport.ConditionalSetter setter = 
 	    new BindingListenerSupport.ConditionalSetter(this.path.start,
 							 pathElmt.getValue());
 
-	BindingTextActionListener alistener =
+	final BindingTextActionListener alistener =
 	    new BindingTextActionListener(setter);
 
-	BindingFocusListener flistener =
+	final BindingFocusListener flistener =
 	    new BindingFocusListener(setter);
 
-	ArrayList list = registry.
-	    get(BindingListenerCategory.ACTION);
+	ArrayList list = registry.get(BindingListenerCategory.ACTION);
 
 	if (list != null) {
 	    list.add(alistener);
@@ -341,8 +337,7 @@ class BindingPostAddListenerHook
 	    registry.put(BindingListenerCategory.ACTION, list);
 	} // end of else
 
-	list = registry.
-	    get(BindingListenerCategory.FOCUS);
+	list = registry.get(BindingListenerCategory.FOCUS);
 
 	if (list != null) {
 	    list.add(flistener);

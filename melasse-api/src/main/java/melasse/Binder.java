@@ -143,11 +143,10 @@ public class Binder {
 	} // end of else
 
 	// Mediator factories
-	MediatorFactory inMediatorFactory =
-	    (MediatorFactory) options.
+	final MediatorFactory inMediatorFactory = (MediatorFactory) options.
 	    get(BindingKey.INPUT_MEDIATOR_FACTORY);
 
-	MediatorFactory outMediatorFactory =
+	final MediatorFactory outMediatorFactory =
 	    (MediatorFactory) options.
 	    get(BindingKey.OUTPUT_MEDIATOR_FACTORY);
 
@@ -227,10 +226,10 @@ public class Binder {
 	} // end of if
 
 	// Object path listener
-	BindingExchangeObjectPathListener sxPathListener =
+	final BindingExchangeObjectPathListener sxPathListener =
 	    new BindingExchangeObjectPathListener(spath.start);
 
-	BindingOutputObjectPathListener soPathListener =
+	final BindingOutputObjectPathListener soPathListener =
 	    new BindingOutputObjectPathListener(tpath.start);
 
 	// automatically set value from source to target,
@@ -241,10 +240,9 @@ public class Binder {
 
 	// Initial value
 	// set source value to target if possible
-	Object iniVal = spath.end.getValue();
+	final Object iniVal = spath.end.getValue();
 	
-	logger.log(Level.FINER,
-		   "source initial value = {0}", iniVal);
+	logger.log(Level.FINER, "source initial value = {0}", iniVal);
 	
 	// Sets directly from last element
 	tpath.end.setAndTransformValue(iniVal);
@@ -255,7 +253,7 @@ public class Binder {
      * 
      * @param options Binding options
      */
-    private static void expandKeys(BindingOptionMap options) {
+    private static void expandKeys(final BindingOptionMap options) {
 	synchronized(options) {
 	    // Numeric
 	    if (options.containsKey(NumericBindingKey.BIGINTEGER_TO_INTEGER)) {
@@ -309,10 +307,10 @@ public class Binder {
      * @param pathElmt Path element
      * @return Aggregating value transformer
      */
-    protected static ValueTransformer getBooleanAndAggregateTransformer(ObjectPathElement pathElmt) {
+    protected static ValueTransformer getBooleanAndAggregateTransformer(final ObjectPathElement pathElmt) {
 
-	Logger logger = Logger.getLogger(/*LibraSwing*/"Melasse");
-	Integer key = System.identityHashCode(pathElmt);
+	final Logger logger = Logger.getLogger(/*LibraSwing*/"Melasse");
+	final Integer key = System.identityHashCode(pathElmt);
 
 	logger.log(Level.FINER, "path element = {0}, key = {1}", 
 		   new Object[] { pathElmt, key });
@@ -329,8 +327,8 @@ public class Binder {
 	    } // end of if
 	} // end of sync
 
-	Object object = pathElmt.getTargetObject();
-	String property = pathElmt.getProperty();
+	final Object object = pathElmt.getTargetObject();
+	final String property = pathElmt.getProperty();
 
 	logger.log(Level.FINER,
 		   "target object = {0}, property = {1}",
@@ -375,7 +373,7 @@ public class Binder {
 	ObjectPathElement previousElmt = null;
 	Object parentObject = object;
 	String objectPart = path;
-	StringTokenizer tok = new StringTokenizer(objectPart, ".");
+	final StringTokenizer tok = new StringTokenizer(objectPart, ".");
 	int toklen = tok.countTokens();
 	
 	ObjectPathElement ope;
@@ -421,9 +419,9 @@ public class Binder {
      * @see BindingListenerCategory
      * @todo Restricted addPropertyChangeListener
      */
-    protected static boolean addListener(Object object,
-					 BindingListenerCategory category,
-					 Object listener) {
+    protected static boolean addListener(final Object object,
+					 final BindingListenerCategory category,
+					 final Object listener) {
 	
 	Logger logger = Logger.getLogger(/*LibraSwing*/"Melasse");
 
@@ -431,11 +429,10 @@ public class Binder {
 		   "object = {0}, category = {1}, listener = {2}",
 		   new Object[] { object, category, listener });
 
-	Class objectClass = object.getClass();
-	String className = objectClass.getName();
+	final Class objectClass = object.getClass();
+	final String className = objectClass.getName();
 
-	logger.log(Level.FINER,
-		   "class name = {0}", className);
+	logger.log(Level.FINER, "class name = {0}", className);
 
 	Method meth = null;
 
@@ -527,8 +524,8 @@ public class Binder {
 		   "object = {0}, category = {1}, listener = {2}",
 		   new Object[] { object, category, listener });
 
-	Class objectClass = object.getClass();
-	String className = objectClass.getName();
+	final Class objectClass = object.getClass();
+	final String className = objectClass.getName();
 
 	logger.log(Level.FINER,
 		   "className = {0}", className);
@@ -616,9 +613,9 @@ public class Binder {
      * @param property Name of property on target |object|
      * @param value New property value
      */
-    protected static void setValue(Object object,
-				   String property,
-				   Object value) {
+    protected static void setValue(final Object object,
+				   final String property,
+				   final Object value) {
 
 	Logger logger = Logger.getLogger(/*LibraSwing*/"Melasse");
 
@@ -628,11 +625,10 @@ public class Binder {
 		       object, property, value
 		   });
 
-	Class objectClass = object.getClass();
-	String className = objectClass.getName();
+	final Class objectClass = object.getClass();
+	final String className = objectClass.getName();
 
-	logger.log(Level.FINER,
-		   "class name = {0}", className);
+	logger.log(Level.FINER, "class name = {0}", className);
 
 	Method setter = null;
 
@@ -708,11 +704,8 @@ public class Binder {
 	    logger.log(Level.SEVERE,
 		       "Fails to set property value", c);
 
-	    String type = "<nulltype>";
-
-	    if (value != null) {
-		type = value.getClass().toString();
-	    } // end of if
+	    final String type = (value == null) ? "<nulltype>"
+                : value.getClass().toString();
 
 	    logger.log(Level.SEVERE,
 		       "target class = {0}, property = {1}, value = {2} ({3})",
@@ -728,22 +721,18 @@ public class Binder {
      * @param property Name of property on target |object|
      * @return Value for |property| on target |object|
      */
-    protected static Object getValue(Object object,
-				     String property) {
+    protected static Object getValue(final Object object,
+				     final String property) {
 
-	Logger logger = Logger.getLogger(/*LibraSwing*/"Melasse");
+	Logger logger = Logger.getLogger("Melasse");
 
-	logger.log(Level.FINER,
-		   "object = {0}, property = {1}",
-		   new Object[] {
-		       object, property
-		   });
+	logger.log(Level.FINER, "object = {0}, property = {1}",
+		   new Object[] { object, property });
 
-	Class objectClass = object.getClass();
-	String className = objectClass.getName();
+	final Class objectClass = object.getClass();
+	final String className = objectClass.getName();
 
-	logger.log(Level.FINER,
-		   "className = {0}", className);
+	logger.log(Level.FINER, "className = {0}", className);
 
 	Method getter = null;
 
@@ -821,8 +810,7 @@ public class Binder {
 	try {
 	    return getter.invoke(object, new Object[0]);
 	} catch (Exception e) {
-	    logger.log(Level.SEVERE,
-		       "Fails to get property", e);
+	    logger.log(Level.SEVERE, "Fails to get property", e);
 
 	    logger.log(Level.SEVERE,
 		       "Fails to get property value: {0}, property = {1}",
@@ -906,14 +894,14 @@ public class Binder {
 	/**
 	 * Aggregated property
 	 */
-	private String property = null;
+	private final String property;
 
 	/**
 	 * Property group
 	 * @todo Weak reference
 	 * @todo Custom class
 	 */
-	private HashMap<String,Object> group = null;
+	private final HashMap<String,Object> group;
 
 	/**
 	 * Last value
@@ -928,8 +916,8 @@ public class Binder {
 	 * @param group Property group
 	 * @param property Property name
 	 */
-	public AndClauseTransformer(HashMap<String,Object> group,
-				    String property) {
+	public AndClauseTransformer(final HashMap<String,Object> group,
+				    final String property) {
 
 	    this.group = group;
 	    this.property = property;
@@ -940,7 +928,7 @@ public class Binder {
 	/**
 	 * {@inheritDoc}
 	 */
-	public Boolean transform(Boolean value) {
+	public Boolean transform(final Boolean value) {
 	    synchronized(this.group) {
 		Integer fnum = (Integer) this.group.get(this.property);
 

@@ -6,7 +6,9 @@ package melasse;
  *
  * @author Cedric Chantepie 
  */
-public class StringLengthToBooleanTransformer implements ValueTransformer<String> {
+public class StringLengthToBooleanTransformer 
+    implements ValueTransformer<String> {
+
     // --- Shared ---
 
     /**
@@ -24,7 +26,7 @@ public class StringLengthToBooleanTransformer implements ValueTransformer<String
     /**
      * Trim string value before test, or not
      */
-    private boolean trimBefore = false;
+    private final boolean trimBefore;
 
     // --- Constructors ---
 
@@ -34,7 +36,7 @@ public class StringLengthToBooleanTransformer implements ValueTransformer<String
      * @param trimBefore Indicates whether should trim string before 
      * transformation
      */
-    private StringLengthToBooleanTransformer(boolean trimBefore) {
+    private StringLengthToBooleanTransformer(final boolean trimBefore) {
 	this.trimBefore = trimBefore;
     } // end of <init>
 
@@ -69,7 +71,7 @@ public class StringLengthToBooleanTransformer implements ValueTransformer<String
      * @param value String value
      * @return Boolean value
      */
-    public Boolean transform(String value) {
+    public Boolean transform(final String value) {
 	if (value == null) {
 	    return false;
 	} // end of if

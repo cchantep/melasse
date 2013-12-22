@@ -55,7 +55,7 @@ public enum BindingListenerCategory {
     /**
      * Key name
      */
-    private String name = null;
+    private final String name;
 
     // --- Constructors ---
 
@@ -64,7 +64,7 @@ public enum BindingListenerCategory {
      *
      * @param name Key name
      */
-    private BindingListenerCategory(String name) {
+    private BindingListenerCategory(final String name) {
 	this.name = name;
     } // end of <init>
 
