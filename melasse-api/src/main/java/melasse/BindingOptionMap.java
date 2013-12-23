@@ -9,7 +9,7 @@ import java.util.Map;
  * @author Cedric Chantepie 
  * @see melasse.BindingKey
  */
-public class BindingOptionMap extends HashMap {
+public class BindingOptionMap extends HashMap<BindingKey,Object> {
     // --- Well known instances ---
 
     /**
@@ -21,7 +21,7 @@ public class BindingOptionMap extends HashMap {
 	BindingOptionMap options = new BindingOptionMap().
 	    add(BindingKey.TARGET_MODE);
 
-	targetModeOptions = new UnmutableBindingOptionMap(options);
+	targetModeOptions = new ImmutableBindingOptionMap(options);
     } // end of <static>
 
     // --- Constructors ---
@@ -29,7 +29,7 @@ public class BindingOptionMap extends HashMap {
     /**
      * No-arg constructor.
      */
-    public BindingOptionMap() {
+    private BindingOptionMap() {
 	super();
     } // end of <init>
 
@@ -38,7 +38,7 @@ public class BindingOptionMap extends HashMap {
      *
      * @param m Original map
      */
-    protected BindingOptionMap(Map m) {
+    protected BindingOptionMap(final Map<BindingKey,Object> m) {
 	super(m);
     } // end of <init>
 
@@ -51,7 +51,7 @@ public class BindingOptionMap extends HashMap {
      * @param value Option value
      * @return Current option map with modification
      */
-    public BindingOptionMap add(final Object key, final Object value) {
+    public BindingOptionMap add(final BindingKey key, final Object value) {
 	super.put(key, value);
 
 	return this;
@@ -63,7 +63,7 @@ public class BindingOptionMap extends HashMap {
      * @param key Option key
      * @return Current option map with modification
      */
-    public BindingOptionMap add(Object key) {
+    public BindingOptionMap add(final BindingKey key) {
 	return this.add(key, Boolean.TRUE);
     } // end of add
 
@@ -74,7 +74,7 @@ public class BindingOptionMap extends HashMap {
      *
      * @author Cedric Chantepie 
      */
-    static final class UnmutableBindingOptionMap extends BindingOptionMap {
+    static final class ImmutableBindingOptionMap extends BindingOptionMap {
 	// --- Constructors ---
 
 	/**
@@ -82,8 +82,8 @@ public class BindingOptionMap extends HashMap {
 	 *
 	 * @param keys Option keys
 	 */
-	private UnmutableBindingOptionMap(BindingOptionMap keys) {
-	    super((Map) keys);
+	private ImmutableBindingOptionMap(BindingOptionMap keys) {
+	    super((Map<BindingKey,Object>) keys);
 	} // end of <init>
 
 	// ---
@@ -98,22 +98,22 @@ public class BindingOptionMap extends HashMap {
 	/**
 	 * {@inheritDoc}
 	 */
-	public Object put(Object key, Object value) {
+	public Object put(BindingKey key, Object value) {
 	    throw new UnsupportedOperationException();
 	} // end of put
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public void putAll(Map t) {
+	public void putAll(Map<? extends BindingKey,? extends Object> t) {
 	    throw new UnsupportedOperationException();
 	} // end of put
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public Object remove(Object key) {
+	public Object remove(BindingKey key) {
 	    throw new UnsupportedOperationException();
 	} // end of put
-    } // end of class UnmutableBindingOptionMap
+    } // end of class ImmutableBindingOptionMap
 } // end of class BindingOptionMap

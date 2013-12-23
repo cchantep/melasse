@@ -87,3 +87,22 @@ Binder.bind("text", textComponent,
                 getTrimmingInstance()).
                 add(TextBindingKey.CONTINUOUSLY_UPDATE_VALUE));
 ```
+
+## Provided transformers
+
+- NegateBooleanTransformer
+- IntegerToBooleanTransformer
+
+## Enhanced property change support
+
+As Melasse can be bound to property change on Java Bean, it also provided an enhanced utility to fire such changes.
+
+This utility allow to declare dependencies between properties, so that if property B is depending on A, when A is changed there are 2 change events which are fired, first for A and second for B.
+
+This is also useful to easily generate change event based on several properties. As dependent property can be a computed one, result of computation is fired as change event each time properties it depends on are changed. 
+
+## Binding options
+
+Way bindings are set up can be configured providing options, as firth argument of the `bind` method.
+
+- targetModeOptions: When using a read-only property as binding source. Avoid warning such as `Target object does not support setting value for property X: myInstance@123456`.

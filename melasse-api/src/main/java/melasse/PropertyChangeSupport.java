@@ -15,13 +15,13 @@ import java.beans.PropertyChangeEvent;
  * @author Cedric Chantepie 
  * @todo Setter annotation propertyWillChange ... session.propertyDidChange
  */
-public class PropertyChangeSupport extends java.beans.PropertyChangeSupport {
+public class PropertyChangeSupport<T> extends java.beans.PropertyChangeSupport {
     // --- Properties ---
     
     /**
      * Source bean
      */
-    private Object sourceBean = null;
+    private final T sourceBean;
 
     /**
      * Dependent key registry : master property <-> dependent properties
@@ -46,7 +46,7 @@ public class PropertyChangeSupport extends java.beans.PropertyChangeSupport {
      *
      * @param sourceBean The bean to be given as the source for any events
      */
-    public PropertyChangeSupport(Object sourceBean) {
+    public PropertyChangeSupport(final T sourceBean) {
 	super(sourceBean);
 
 	this.sourceBean = sourceBean;
@@ -54,9 +54,7 @@ public class PropertyChangeSupport extends java.beans.PropertyChangeSupport {
 	this.values = new HashMap<String,Object>();
 	this.logger = Binder.getLogger();
 
-	this.logger.log(Level.FINER, 
-			"Inited: {0}", this.sourceBean);
-
+	this.logger.log(Level.FINER, "Inited: {0}", this.sourceBean);
     } // end of PropertyChangeSupport
 
     // ---
@@ -77,7 +75,7 @@ public class PropertyChangeSupport extends java.beans.PropertyChangeSupport {
      * pcs.propertyWillChange("master");
      * this.master = newVal;
      * pcs.firePropertyChange("master", oldVal, newVal);
-     * // not recommanded if property can be multithreaded
+     * // not recommanded if property can be used from different threads
      * </code>
      * or
      * <code>pcs.registerDependency("master", new String[] { "dependent1" });
@@ -91,7 +89,9 @@ public class PropertyChangeSupport extends java.beans.PropertyChangeSupport {
      * @see #propertyWillChange
      * @see PropertyEditSession#propertyDidChange
      */
-    public void registerDependency(String master, String[] dependent) {
+    public void registerDependency(final String master, 
+                                   final String[] dependent) {
+
 	this.logger.log(Level.FINER,
 			"Will register dependency: master property = {0}", 
 			master);
@@ -136,12 +136,10 @@ public class PropertyChangeSupport extends java.beans.PropertyChangeSupport {
      * @see #registerDependency
      * @see #propertyDidChange
      */
-    public PropertyEditSession propertyWillChange(String propertyName) {
-	this.logger.log(Level.FINER,
-			"Property will change: {0}", propertyName);
+    public PropertyEditSession propertyWillChange(final String propertyName) {
+	this.logger.log(Level.FINER, "Property will change: {0}", propertyName);
 
-	Object value = Binder.
-	    getValue(this.sourceBean, propertyName);
+	Object value = Binder.getValue(this.sourceBean, propertyName);
 	
 	PropertyEditSession session = 
 	    new PropertyEditSession(propertyName, value);

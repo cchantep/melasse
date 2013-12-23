@@ -173,17 +173,17 @@ class BindingPostAddListenerHook
      * @param pathElmt
      * @param registry Listeners registry
      */
-    private void addPropertyListeners(ObjectPathElement pathElmt,
+    private void addPropertyListeners(final ObjectPathElement pathElmt,
 				      final Map<BindingListenerCategory,ArrayList> registry) {
 
 	this.logger.log(Level.FINER,
 			"observed element = {0}, registry = {1}, path = {2}",
 			new Object[] { pathElmt, registry, this.path });
 
-	BindingListenerSupport.Setter setter = 
+	final BindingListenerSupport.Setter setter = 
 	    new BindingListenerSupport.Setter(this.path.start);
 
-	BindingPropertyChangeListener plistener = 
+	final BindingPropertyChangeListener plistener = 
 	    new BindingPropertyChangeListener(setter,
 					      pathElmt.getProperty());
 
@@ -211,7 +211,7 @@ class BindingPostAddListenerHook
      * @param pathElmt
      * @param registry Listeners registry
      */
-    private void addComboBoxListeners(ObjectPathElement pathElmt,
+    private void addComboBoxListeners(final ObjectPathElement pathElmt,
 				      final Map<BindingListenerCategory,ArrayList> registry) {
 
 	this.logger.log(Level.FINER,

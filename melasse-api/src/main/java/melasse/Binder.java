@@ -675,8 +675,7 @@ public class Binder {
 		classSetters = setters.get(className);
 	    } // end of else
 
-	    logger.log(Level.FINER,
-		       "classSetters = {0}", classSetters);
+	    logger.log(Level.FINER, "classSetters = {0}", classSetters);
 
 	    if (!classSetters.containsKey(property)) {
 		logger.log(Level.WARNING,

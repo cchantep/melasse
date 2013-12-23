@@ -28,7 +28,7 @@ abstract class BindingListenerSupport {
      *
      * @param setter Setter to propagate change from source to target object
      */
-    protected BindingListenerSupport(Setter setter) {
+    protected BindingListenerSupport(final Setter setter) {
 	if (setter == null) {
 	    throw new IllegalArgumentException("Invalid setter: " + setter);
 	} // end of if
@@ -45,7 +45,7 @@ abstract class BindingListenerSupport {
      *
      * @param value New property value
      */
-    protected void setValue(Object value) {
+    protected void setValue(final Object value) {
 	this.setter.set(value);
     } // end of setValue
 
@@ -84,7 +84,7 @@ abstract class BindingListenerSupport {
 	    } // end of if
 
 	    this.pathStart = pathStart;
-	    this.logger = Logger.getLogger(/*LibraSwing*/"Melasse");
+	    this.logger = Logger.getLogger("Melasse");
 	} // end of <init>
 
 	// --- 
@@ -102,8 +102,7 @@ abstract class BindingListenerSupport {
 				"Cannot set value as property " +
 				"cannot be reached: {0} = {1}",
 				new Object[] { 
-				    pathStart,
-				    pathStart.getValue()
+				    pathStart, pathStart.getValue()
 				});
 	    
 		return;

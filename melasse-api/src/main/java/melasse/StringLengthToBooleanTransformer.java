@@ -76,10 +76,8 @@ public class StringLengthToBooleanTransformer
 	    return false;
 	} // end of if
 
-	if (trimBefore) {
-	    value = value.trim();
-	} // end of if
+	return (!trimBefore) ? (value.length() > 0)
+            : (value.trim().length() > 0);
 
-	return (value.length() > 0);
     } // end of transform
 } // end of class StringLengthToBooleanTransformer
