@@ -88,6 +88,25 @@ Binder.bind("text", textComponent,
                 add(TextBindingKey.CONTINUOUSLY_UPDATE_VALUE));
 ```
 
+## Bind error display
+
+Visibility of error can be directly bound using `JLabel.visible` as endpoint.
+
+```java
+JLabel errorDisplay = new JLabel("Missing value");
+JTextField field = new JTextField();
+
+// ... lay out comonents
+
+Binder.bind("visible", errorDisplay, "text", field,
+                    new BindingOptionMap().
+                    add(BindingKey.INPUT_TRANSFORMER,
+                        StringLengthToBooleanTransformer.
+                        getTrimmingInstance().negate()).
+                        add(TextBindingKey.CONTINUOUSLY_UPDATE_VALUE));
+// |errorDisplay| will be visible when |field| is empty
+```
+
 ## Provided transformers
 
 - AppliedTransformer
