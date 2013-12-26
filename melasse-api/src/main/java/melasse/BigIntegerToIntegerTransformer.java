@@ -7,7 +7,8 @@ import java.math.BigInteger;
  *
  * @author Cedric Chantepie 
  */
-public class BigIntegerToIntegerTransformer implements ValueTransformer<BigInteger> {
+public class BigIntegerToIntegerTransformer 
+    implements UnaryFunction<BigInteger,Integer> {
 
     // --- Shared ---
 
@@ -32,7 +33,7 @@ public class BigIntegerToIntegerTransformer implements ValueTransformer<BigInteg
     /**
      * Returns transformer instance.
      */
-    public static synchronized ValueTransformer getInstance() {
+    public static synchronized BigIntegerToIntegerTransformer getInstance() {
 	if (instance == null) {
 	    instance = new BigIntegerToIntegerTransformer();
 	} // end of if
@@ -48,7 +49,7 @@ public class BigIntegerToIntegerTransformer implements ValueTransformer<BigInteg
      * @param value BigInteger value
      * @return Integer value
      */
-    public Integer transform(BigInteger value) {
+    public Integer apply(final BigInteger value) {
 	if (value == null) {
 	    return ZERO;
 	} // end of if

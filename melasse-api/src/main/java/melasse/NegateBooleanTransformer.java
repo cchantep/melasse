@@ -5,7 +5,9 @@ package melasse;
  *
  * @author Cedric Chantepie 
  */
-public class NegateBooleanTransformer implements ValueTransformer<Boolean> {
+public class NegateBooleanTransformer 
+    implements UnaryFunction<Boolean,Boolean> {
+
     // --- Constants ---
 
     /**
@@ -31,7 +33,7 @@ public class NegateBooleanTransformer implements ValueTransformer<Boolean> {
     /**
      * Returns trimming instance.
      */
-    public static synchronized ValueTransformer getInstance() {
+    public static synchronized NegateBooleanTransformer getInstance() {
 	if (instance == null) {
 	    instance = new NegateBooleanTransformer();
 	} // end of if
@@ -48,11 +50,49 @@ public class NegateBooleanTransformer implements ValueTransformer<Boolean> {
      * @param value Boolean value
      * @return Boolean value
      */
-    public Boolean transform(Boolean value) {
+    public Boolean apply(Boolean value) {
 	if (Boolean.TRUE.equals(value)) {
 	    return Boolean.FALSE;
 	} // end of if
 
 	return Boolean.TRUE;
     } // end of transform
+
+    /**
+     * Transforms boolean value returned by given |transformer|, 
+     * and returns the negated value.
+     */
+    public static <T> UnaryFunction<T,Boolean> negate(final UnaryFunction<T,Boolean> transformer) {
+        return new WrapperTransformer<T>(transformer);
+    } // end of negate
+
+    // --- Inner classes ---
+
+    /**
+     * Wrapper implementation.
+     */
+    static final class WrapperTransformer<T> 
+        implements UnaryFunction<T,Boolean> {
+
+        // --- Properties ---
+
+        /**
+         * Wrapped transformer
+         */
+        private final UnaryFunction<T,Boolean> transformer;
+
+        // --- Constructor ---
+
+        /**
+         */
+        protected WrapperTransformer(final UnaryFunction<T,Boolean> t) {
+            this.transformer = t;
+        } // end of <init>
+
+        // ---
+
+        public Boolean apply(final T input) {
+            return !transformer.apply(input);
+        } // end of apply
+    } // end of class WrapperTransformer
 } // end of class NegateBooleanTransformer

@@ -5,7 +5,8 @@ package melasse;
  *
  * @author Cedric Chantepie 
  */
-public class NotNullTransformer implements ValueTransformer<Object> {
+public class NotNullTransformer implements UnaryFunction<Object,Boolean> {
+
     // --- Shared ---
 
     /**
@@ -24,7 +25,7 @@ public class NotNullTransformer implements ValueTransformer<Object> {
     /**
      * Returns instance transformer.
      */
-    public static synchronized ValueTransformer getInstance() {
+    public static synchronized NotNullTransformer getInstance() {
 	if (instance == null) {
 	    instance = new NotNullTransformer();
 	} // end of if
@@ -37,8 +38,7 @@ public class NotNullTransformer implements ValueTransformer<Object> {
     /**
      * Returns true if |object| is not null.
      */
-    public Boolean transform(Object object) {
+    public Boolean apply(Object object) {
 	return (object != null);
-    } // end of transform
-
-} // end of interface ValueTransformer
+    } // end of apply
+} // end of interface NotNullTransformer

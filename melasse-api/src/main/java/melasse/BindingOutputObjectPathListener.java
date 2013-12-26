@@ -16,12 +16,12 @@ class BindingOutputObjectPathListener implements ObjectPathListener {
     /**
      * Path connected to observed one
      */
-    private ObjectPathElement connected = null;
+    private final ObjectPathElement connected;
 
     /**
      * Transform value from source to target
      */
-    private ValueTransformer transformer = null;
+    private UnaryFunction transformer = null;
 
     /**
      * Logger 
@@ -35,13 +35,13 @@ class BindingOutputObjectPathListener implements ObjectPathListener {
      *
      * @param path Path connected to observed one
      */
-    protected BindingOutputObjectPathListener(ObjectPathElement path) {
+    protected BindingOutputObjectPathListener(final ObjectPathElement path) {
 	if (path == null) {
 	    throw new IllegalArgumentException("Invalid path: " + path);
 	} // end of if
 
 	this.connected = path;
-	this.logger = Logger.getLogger(/*LibraSwing*/"Melasse");
+	this.logger = Logger.getLogger("Melasse");
     
 	this.logger.finer("Inited");
     } // end of <init>
@@ -51,19 +51,18 @@ class BindingOutputObjectPathListener implements ObjectPathListener {
     /**
      * {@inheritDoc}
      */
-    public void setTransformer(ValueTransformer transformer) {
+    public void setTransformer(final UnaryFunction transformer) {
 	this.transformer = transformer;
     } // end of setTransformer
 
     /**
      * {@inheritDoc}
      */
-    public void pathCompleted(ObjectPathElement element) {
-	Object value = element.getValue();
+    public void pathCompleted(final ObjectPathElement element) {
+	final Object value = element.getValue();
 
-	this.logger.log(Level.FINER,
-			"element = {0}, value = {1}", 
-			new Object[] { element, value });
+	this.logger.log(Level.FINER, "element = {0}, value = {1}", 
+                        new Object[] { element, value });
 
 	this.connected.setAndTransformValue(value);
     } // end of pathCompleted

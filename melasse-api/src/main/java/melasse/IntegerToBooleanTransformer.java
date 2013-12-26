@@ -6,7 +6,9 @@ package melasse;
  *
  * @author Cedric Chantepie 
  */
-public class IntegerToBooleanTransformer implements ValueTransformer<Integer> {
+public class IntegerToBooleanTransformer 
+    implements UnaryFunction<Integer,Boolean> {
+
     // --- Constants ---
 
     /**
@@ -32,7 +34,7 @@ public class IntegerToBooleanTransformer implements ValueTransformer<Integer> {
     /**
      * Returns trimming instance.
      */
-    public static synchronized ValueTransformer getInstance() {
+    public static synchronized IntegerToBooleanTransformer getInstance() {
 	if (instance == null) {
 	    instance = new IntegerToBooleanTransformer();
 	} // end of if
@@ -49,7 +51,7 @@ public class IntegerToBooleanTransformer implements ValueTransformer<Integer> {
      * @param value Integer value
      * @return Boolean value
      */
-    public Boolean transform(Integer value) {
+    public Boolean apply(final Integer value) {
 	if (value == null) {
 	    return Boolean.FALSE;
 	} // end of if
@@ -60,4 +62,11 @@ public class IntegerToBooleanTransformer implements ValueTransformer<Integer> {
 
 	return Boolean.TRUE;
     } // end of transform
+
+    /**
+     * Returns negative transformer.
+     */
+    public UnaryFunction<Integer,Boolean> negate() {
+        return NegateBooleanTransformer.negate(this);
+    } // end of negate
 } // end of class IntegerToBooleanTransformer

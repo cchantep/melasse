@@ -90,8 +90,10 @@ Binder.bind("text", textComponent,
 
 ## Provided transformers
 
-- NegateBooleanTransformer
+- AppliedTransformer
 - IntegerToBooleanTransformer
+- NegateBooleanTransformer
+- NotNullTransformer
 
 ## Enhanced property change support
 

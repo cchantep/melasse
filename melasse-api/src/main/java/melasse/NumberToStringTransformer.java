@@ -7,14 +7,14 @@ import java.text.NumberFormat;
  *
  * @author Cedric Chantepie 
  */
-public class NumberToStringTransformer implements ValueTransformer<Number> {
+public class NumberToStringTransformer implements UnaryFunction<Number,String> {
 
     // --- Properties ---
 
     /**
      * Number format
      */
-    private NumberFormat format = null;
+    private final NumberFormat format;
 
     // --- Constructors ---
 
@@ -23,7 +23,7 @@ public class NumberToStringTransformer implements ValueTransformer<Number> {
      *
      * @param format Number format used for transformation
      */
-    private NumberToStringTransformer(NumberFormat format) {
+    private NumberToStringTransformer(final NumberFormat format) {
 	if (format == null) {
 	    throw new IllegalArgumentException("Invalid number format: " +
 					       format);
@@ -38,7 +38,7 @@ public class NumberToStringTransformer implements ValueTransformer<Number> {
      *
      * @param format Number format used for transformation
      */
-    public static ValueTransformer getInstance(NumberFormat format) {
+    public static NumberToStringTransformer getInstance(NumberFormat format) {
 	return new NumberToStringTransformer(format);
     } // end of getInstance
 
@@ -50,7 +50,7 @@ public class NumberToStringTransformer implements ValueTransformer<Number> {
      * @param value Number value
      * @return String representation, according format
      */
-    public String transform(Number value) {
+    public String apply(final Number value) {
 	if (value == null) {
 	    return null;
 	} // end of if

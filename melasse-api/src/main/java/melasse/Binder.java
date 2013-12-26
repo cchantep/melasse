@@ -45,7 +45,7 @@ public class Binder {
     /**
      * Aggregators
      */
-    private static final HashMap<Integer,ValueTransformer> aggregators;
+    private static final HashMap<Integer,UnaryFunction> aggregators;
     
     /**
      * Value history for aggregating
@@ -63,7 +63,7 @@ public class Binder {
 	addListeners = new HashMap<String,HashMap<BindingListenerCategory,Method>>();
 	removeListeners = new HashMap<String,HashMap<BindingListenerCategory,Method>>();
 	aggregateValues = new HashMap<Object,HashMap<String,Object>>();
-	aggregators = new HashMap<Integer,ValueTransformer>();
+	aggregators = new HashMap<Integer,UnaryFunction>();
     } // end of <static>
 
     // --- Constructors ---
@@ -163,13 +163,13 @@ public class Binder {
 	} // end of if
 
 	// Transformers from options
-	ValueTransformer soutTransformer = null;
-	ValueTransformer toutTransformer = 
-	    (ValueTransformer) options.
+	UnaryFunction soutTransformer = null;
+	UnaryFunction toutTransformer = 
+	    (UnaryFunction) options.
 	    get(BindingKey.OUTPUT_TRANSFORMER);
 
 	if (options.containsKey(BindingKey.INPUT_TRANSFORMER)) {
-	    soutTransformer = (ValueTransformer) options.
+	    soutTransformer = (UnaryFunction) options.
 		get(BindingKey.INPUT_TRANSFORMER);
 
 	    logger.log(Level.FINER,
@@ -307,7 +307,7 @@ public class Binder {
      * @param pathElmt Path element
      * @return Aggregating value transformer
      */
-    protected static ValueTransformer getBooleanAndAggregateTransformer(final ObjectPathElement pathElmt) {
+    protected static UnaryFunction getBooleanAndAggregateTransformer(final ObjectPathElement pathElmt) {
 
 	final Logger logger = Logger.getLogger(/*LibraSwing*/"Melasse");
 	final Integer key = System.identityHashCode(pathElmt);
@@ -315,7 +315,7 @@ public class Binder {
 	logger.log(Level.FINER, "path element = {0}, key = {1}", 
 		   new Object[] { pathElmt, key });
 
-	ValueTransformer aggregator = null;
+	UnaryFunction aggregator = null;
 	
 	synchronized(aggregators) {
 	    aggregator = aggregators.get(key);
@@ -886,7 +886,7 @@ public class Binder {
      * @author Cedric Chantepie 
      */
     private static class AndClauseTransformer 
-	implements ValueTransformer<Boolean> {
+        implements UnaryFunction<Boolean,Boolean> {
 
 	// --- Properties ---
 
@@ -927,7 +927,7 @@ public class Binder {
 	/**
 	 * {@inheritDoc}
 	 */
-	public Boolean transform(final Boolean value) {
+	public Boolean apply(final Boolean value) {
 	    synchronized(this.group) {
 		Integer fnum = (Integer) this.group.get(this.property);
 

@@ -7,7 +7,7 @@ package melasse;
  * @author Cedric Chantepie 
  */
 public class StringLengthToBooleanTransformer 
-    implements ValueTransformer<String> {
+    implements UnaryFunction<String,Boolean> {
 
     // --- Shared ---
 
@@ -43,7 +43,7 @@ public class StringLengthToBooleanTransformer
     /**
      * Returns trimming instance.
      */
-    public static synchronized ValueTransformer getTrimmingInstance() {
+    public static synchronized StringLengthToBooleanTransformer getTrimmingInstance() {
 	if (trimmingInstance == null) {
 	    trimmingInstance = new StringLengthToBooleanTransformer(true);
 	} // end of if
@@ -54,7 +54,7 @@ public class StringLengthToBooleanTransformer
     /**
      * Returns non trimming instance.
      */
-    public static synchronized ValueTransformer getNonTrimmingInstance() {
+    public static synchronized StringLengthToBooleanTransformer getNonTrimmingInstance() {
 	if (nonTrimmingInstance == null) {
 	    nonTrimmingInstance = new StringLengthToBooleanTransformer(false);
 	} // end of if
@@ -71,7 +71,7 @@ public class StringLengthToBooleanTransformer
      * @param value String value
      * @return Boolean value
      */
-    public Boolean transform(final String value) {
+    public Boolean apply(final String value) {
 	if (value == null) {
 	    return false;
 	} // end of if
@@ -80,4 +80,11 @@ public class StringLengthToBooleanTransformer
             : (value.trim().length() > 0);
 
     } // end of transform
+
+    /**
+     * Returns negative transformer.
+     */
+    public UnaryFunction<String,Boolean> negate() {
+        return NegateBooleanTransformer.<String>negate(this);
+    } // end of negate
 } // end of class StringLengthToBooleanTransformer

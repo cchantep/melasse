@@ -5,7 +5,8 @@ package melasse;
  *
  * @author Cedric Chantepie 
  */
-public class StringToCharArrayTransformer implements ValueTransformer<String> {
+public class StringToCharArrayTransformer 
+    implements UnaryFunction<String,char[]> {
 
     // --- Shared ---
 
@@ -25,7 +26,7 @@ public class StringToCharArrayTransformer implements ValueTransformer<String> {
     /**
      * Returns trimming instance.
      */
-    public static synchronized ValueTransformer getInstance() {
+    public static synchronized StringToCharArrayTransformer getInstance() {
 	if (instance == null) {
 	    instance = new StringToCharArrayTransformer();
 	} // end of if
@@ -41,11 +42,7 @@ public class StringToCharArrayTransformer implements ValueTransformer<String> {
      * @param value String value
      * @return Array of char
      */
-    public Object transform(String value) {
-	if (value == null) {
-	    return null;
-	} // end of if
-
-	return value.toCharArray();
+    public char[] apply(final String value) {
+        return (value == null) ? null : value.toCharArray();
     } // end of transform
 } // end of class StringToCharArrayTransformer

@@ -9,7 +9,7 @@ import java.util.Map;
  * @author Cedric Chantepie 
  * @see melasse.BindingKey
  */
-public class BindingOptionMap extends HashMap<BindingKey,Object> {
+public class BindingOptionMap extends HashMap<Object,Object> {
     // --- Well known instances ---
 
     /**
@@ -29,7 +29,7 @@ public class BindingOptionMap extends HashMap<BindingKey,Object> {
     /**
      * No-arg constructor.
      */
-    private BindingOptionMap() {
+    public BindingOptionMap() {
 	super();
     } // end of <init>
 
@@ -38,7 +38,7 @@ public class BindingOptionMap extends HashMap<BindingKey,Object> {
      *
      * @param m Original map
      */
-    protected BindingOptionMap(final Map<BindingKey,Object> m) {
+    protected BindingOptionMap(final Map<Object,Object> m) {
 	super(m);
     } // end of <init>
 
@@ -51,7 +51,7 @@ public class BindingOptionMap extends HashMap<BindingKey,Object> {
      * @param value Option value
      * @return Current option map with modification
      */
-    public BindingOptionMap add(final BindingKey key, final Object value) {
+    public BindingOptionMap add(final Object key, final Object value) {
 	super.put(key, value);
 
 	return this;
@@ -63,7 +63,7 @@ public class BindingOptionMap extends HashMap<BindingKey,Object> {
      * @param key Option key
      * @return Current option map with modification
      */
-    public BindingOptionMap add(final BindingKey key) {
+    public BindingOptionMap add(final Object key) {
 	return this.add(key, Boolean.TRUE);
     } // end of add
 
@@ -83,7 +83,7 @@ public class BindingOptionMap extends HashMap<BindingKey,Object> {
 	 * @param keys Option keys
 	 */
 	private ImmutableBindingOptionMap(BindingOptionMap keys) {
-	    super((Map<BindingKey,Object>) keys);
+	    super((Map<Object,Object>) keys);
 	} // end of <init>
 
 	// ---
@@ -98,21 +98,21 @@ public class BindingOptionMap extends HashMap<BindingKey,Object> {
 	/**
 	 * {@inheritDoc}
 	 */
-	public Object put(BindingKey key, Object value) {
+	public Object put(Object key, Object value) {
 	    throw new UnsupportedOperationException();
 	} // end of put
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public void putAll(Map<? extends BindingKey,? extends Object> t) {
+	public void putAll(Map<? extends Object,? extends Object> t) {
 	    throw new UnsupportedOperationException();
 	} // end of put
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public Object remove(BindingKey key) {
+	public Object remove(Object key) {
 	    throw new UnsupportedOperationException();
 	} // end of put
     } // end of class ImmutableBindingOptionMap
