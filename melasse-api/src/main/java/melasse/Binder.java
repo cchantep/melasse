@@ -23,6 +23,11 @@ public class Binder {
     // --- Shared ---
 
     /**
+     * Logger
+     */
+    private final static Logger defaultLogger = Logger.getLogger("Melasse");
+
+    /**
      * Setters cache
      */
     private static final HashMap<String,HashMap<String,Method>> setters;
@@ -45,12 +50,12 @@ public class Binder {
     /**
      * Aggregators
      */
-    private static final HashMap<Integer,UnaryFunction> aggregators;
+    private static final HashMap<Integer,UnaryFunction<Boolean,Boolean>> aggregators;
     
     /**
      * Value history for aggregating
      */
-    private static final HashMap<Object,HashMap<String,Object>> aggregateValues;
+    private static final HashMap<Object,HashMap<String,Integer>> aggregateValues;
 
     /**
      * Single instance
@@ -58,12 +63,12 @@ public class Binder {
     private static Binder instance = null;
 
     static {
-	setters = new HashMap<String,HashMap<String,Method>>();
-	getters = new HashMap<String,HashMap<String,Method>>();
-	addListeners = new HashMap<String,HashMap<BindingListenerCategory,Method>>();
-	removeListeners = new HashMap<String,HashMap<BindingListenerCategory,Method>>();
-	aggregateValues = new HashMap<Object,HashMap<String,Object>>();
-	aggregators = new HashMap<Integer,UnaryFunction>();
+        setters = new HashMap<String,HashMap<String,Method>>();
+        getters = new HashMap<String,HashMap<String,Method>>();
+        addListeners = new HashMap<String,HashMap<BindingListenerCategory,Method>>();
+        removeListeners = new HashMap<String,HashMap<BindingListenerCategory,Method>>();
+        aggregateValues = new HashMap<Object,HashMap<String,Integer>>();
+        aggregators = new HashMap<Integer,UnaryFunction<Boolean,Boolean>>();
     } // end of <static>
 
     // --- Constructors ---
@@ -77,10 +82,18 @@ public class Binder {
     // ---
 
     /**
-     * Returns binder logger.
+     * Returns binding logger.
      */
-    protected static Logger getLogger() {
-	return Logger.getLogger(/*LibraSwing*/"Melasse");
+    static Logger getLogger(final BindingOptionMap options) {
+        String category = null;
+
+        if (options == null || (category = (String) options.
+                                get(BindingKey.DEBUG_CATEGORY)) == null) {
+
+            return defaultLogger;
+        } // end of if
+
+        return Logger.getLogger(category);
     } // end of getLogger
 
     /**
@@ -93,30 +106,28 @@ public class Binder {
      * @param target Involved target
      * @param options Binding options
      */
-    public static void bind(String sourcePath,
-			    Object source,
-			    String targetPath,
-			    Object target,
-			    BindingOptionMap options) {
+    public static void bind(final String sourcePath,
+                            final Object source,
+                            final String targetPath,
+                            final Object target,
+                            final BindingOptionMap options) {
 
-	Logger logger = getLogger();
+        getLogger(options).log(Level.FINER,
+                   "Binds {0}@{1}.{2} to {3}@{4}.{5}",
+                   new Object[] {
+                       source.getClass().getName(),
+                       new Integer(System.identityHashCode(source)),
+                       sourcePath,
+                       target.getClass().getName(), 
+                       new Integer(System.identityHashCode(target)),
+                       targetPath
+                   });
 
-	logger.log(Level.FINER,
-		   "Binds {0}@{1}.{2} to {3}@{4}.{5}",
-		   new Object[] {
-		       source.getClass().getName(),
-		       new Integer(System.identityHashCode(source)),
-		       sourcePath,
-		       target.getClass().getName(), 
-		       new Integer(System.identityHashCode(target)),
-		       targetPath
-		   });
+        // Object paths
+        final ObjectPath spath = makeObjectPath(source, sourcePath, options);
+        final ObjectPath tpath = makeObjectPath(target, targetPath, options);
 
-	// Object paths
-	ObjectPath spath = makeObjectPath(source, sourcePath);
-	ObjectPath tpath = makeObjectPath(target, targetPath);
-
-	bind(spath, tpath, options);
+        bind(spath, tpath, options);
     } // end of bind
 
     /**
@@ -126,126 +137,123 @@ public class Binder {
      * @param tpath Target object path
      * @param options Binding options
      */
-    public static void bind(ObjectPath spath,
-			    ObjectPath tpath,
-			    BindingOptionMap options) {
+    public static void bind(final ObjectPath spath,
+                            final ObjectPath tpath,
+                            final BindingOptionMap options) {
 
-	Logger logger = getLogger();
+        final Logger logger = getLogger(options);
 
-	logger.log(Level.FINER, 
-		   "source path = {0}, target path = {1}",
-		   new Object[] { spath, tpath });
+        logger.log(Level.FINER, 
+                   "source path = {0}, target path = {1}",
+                   new Object[] { spath, tpath });
 
-	if (options == null) {
-	    options = new BindingOptionMap();
-	} else {
-	    expandKeys(options);
-	} // end of else
+        final BindingOptionMap opts = (options != null) ? expandKeys(options)
+            : new BindingOptionMap();
 
-	// Mediator factories
-	final MediatorFactory inMediatorFactory = (MediatorFactory) options.
-	    get(BindingKey.INPUT_MEDIATOR_FACTORY);
+        // Mediator factories
+        final MediatorFactory inMediatorFactory = 
+            (MediatorFactory) opts.get(BindingKey.INPUT_MEDIATOR_FACTORY);
 
-	final MediatorFactory outMediatorFactory =
-	    (MediatorFactory) options.
-	    get(BindingKey.OUTPUT_MEDIATOR_FACTORY);
+        final MediatorFactory outMediatorFactory =
+            (MediatorFactory) opts.get(BindingKey.OUTPUT_MEDIATOR_FACTORY);
 
-	if (inMediatorFactory != null) {
-	    logger.finer("Will set mediator factory on source path");
+        if (inMediatorFactory != null) {
+            logger.finer("Will set mediator factory on source path");
 
-	    spath.start.setMediatorFactory(inMediatorFactory);
-	} // end of if
+            spath.start.setMediatorFactory(inMediatorFactory);
+        } // end of if
 
-	if (outMediatorFactory != null) {
-	    logger.finer("Will set mediator factory on target path");
+        if (outMediatorFactory != null) {
+            logger.finer("Will set mediator factory on target path");
 
-	    tpath.start.setMediatorFactory(outMediatorFactory);
-	} // end of if
+            tpath.start.setMediatorFactory(outMediatorFactory);
+        } // end of if
 
-	// Transformers from options
-	UnaryFunction soutTransformer = null;
-	UnaryFunction toutTransformer = 
-	    (UnaryFunction) options.
-	    get(BindingKey.OUTPUT_TRANSFORMER);
+        // Transformers from options
+        UnaryFunction<Object,Object> soutTransformer = null;
 
-	if (options.containsKey(BindingKey.INPUT_TRANSFORMER)) {
-	    soutTransformer = (UnaryFunction) options.
-		get(BindingKey.INPUT_TRANSFORMER);
+        @SuppressWarnings("unchecked")
+        final UnaryFunction<Object,Object> toutTransformer = (UnaryFunction<Object,Object>) opts.get(BindingKey.OUTPUT_TRANSFORMER);
 
-	    logger.log(Level.FINER,
-		       "Found source output transformer = {0}",
-		       soutTransformer);
+        if (opts.containsKey(BindingKey.INPUT_TRANSFORMER)) {
+            @SuppressWarnings("unchecked")
+            final UnaryFunction<Object,Object> f = 
+                (UnaryFunction<Object,Object>) opts.
+                get(BindingKey.INPUT_TRANSFORMER);
 
-	    spath.end.setOutputTransformer(soutTransformer);
-	    tpath.end.setInputTransformer(soutTransformer);
-	} else if (toutTransformer != null) {
-	    logger.log(Level.WARNING,
-		       "Bad unidirectional binder, should not found transformer: {0}", 
-		       options.get(BindingKey.OUTPUT_TRANSFORMER));
+            soutTransformer = f;
 
-	    return;
-	} // end of if
+            logger.log(Level.FINER, "Found source output transformer = {0}", 
+                       soutTransformer);
 
-	// Target mode
-	boolean targetMode = (soutTransformer != null);
+            spath.end.setOutputTransformer(soutTransformer);
+            tpath.end.setInputTransformer(soutTransformer);
+        } else if (toutTransformer != null) {
+            logger.log(Level.WARNING, "Bad unidirectional binder, should not found transformer: {0}", opts.get(BindingKey.OUTPUT_TRANSFORMER));
 
-	if (targetMode && toutTransformer != null) {
-	    logger.log(Level.FINER,
-		       "Found object output transformer = {0}",
-		       soutTransformer);
+            return;
+        } // end of if
 
-	    targetMode = false; // input and output transformers
-	} // end of if
+        // Target mode
+        boolean targetMode = (soutTransformer != null);
 
-	if (options.containsKey(BindingKey.TARGET_MODE)) {
-	    logger.finer("Target mode forced to true");
+        if (targetMode && toutTransformer != null) {
+            logger.log(Level.FINER,
+                       "Found object output transformer = {0}",
+                       soutTransformer);
 
-	    targetMode = true;
-	} // end of if
+            targetMode = false; // input and output transformers
+        } // end of if
 
-	logger.log(Level.FINER, "target mode = {0}", targetMode);
+        if (opts.containsKey(BindingKey.TARGET_MODE)) {
+            logger.finer("Target mode forced to true");
 
-	// Add-listener hook
-	BindingPostAddListenerHook shook = 
-	    new BindingPostAddListenerHook(tpath, options);	
+            targetMode = true;
+        } // end of if
 
-	spath.end.registerPostAddListenerHook(shook);
+        logger.log(Level.FINER, "target mode = {0}", targetMode);
 
-	if (!targetMode) {
-	    if (toutTransformer != null) {
-		tpath.end.setOutputTransformer(toutTransformer);
-		spath.end.setInputTransformer(toutTransformer);
-	    } // end of if
+        // Add-listener hook
+        final BindingPostAddListenerHook shook = 
+            new BindingPostAddListenerHook(tpath, opts);        
 
-	    logger.finer("Register binding hook on object path");
+        spath.end.registerPostAddListenerHook(shook);
 
-	    BindingPostAddListenerHook thook = 
-		new BindingPostAddListenerHook(spath, options);
-	    
-	    tpath.end.registerPostAddListenerHook(thook);
-	} // end of if
+        if (!targetMode) {
+            if (toutTransformer != null) {
+                tpath.end.setOutputTransformer(toutTransformer);
+                spath.end.setInputTransformer(toutTransformer);
+            } // end of if
 
-	// Object path listener
-	final BindingExchangeObjectPathListener sxPathListener =
-	    new BindingExchangeObjectPathListener(spath.start);
+            logger.finer("Register binding hook on object path");
 
-	final BindingOutputObjectPathListener soPathListener =
-	    new BindingOutputObjectPathListener(tpath.start);
+            final BindingPostAddListenerHook thook = 
+                new BindingPostAddListenerHook(spath, opts);
+            
+            tpath.end.registerPostAddListenerHook(thook);
+        } // end of if
 
-	// automatically set value from source to target,
-	// when path to object property is completed
-	// or when path to source property is completed
-	tpath.start.addObjectPathListener(sxPathListener);
-	spath.start.addObjectPathListener(soPathListener);
+        // Object path listener
+        final BindingExchangeObjectPathListener sxPathListener =
+            new BindingExchangeObjectPathListener(spath.start);
 
-	// Initial value
-	// set source value to target if possible
-	final Object iniVal = spath.end.getValue();
-	
-	logger.log(Level.FINER, "source initial value = {0}", iniVal);
-	
-	// Sets directly from last element
-	tpath.end.setAndTransformValue(iniVal);
+        final BindingOutputObjectPathListener soPathListener =
+            new BindingOutputObjectPathListener(tpath.start);
+
+        // automatically set value from source to target,
+        // when path to object property is completed
+        // or when path to source property is completed
+        tpath.start.addObjectPathListener(sxPathListener);
+        spath.start.addObjectPathListener(soPathListener);
+
+        // Initial value
+        // set source value to target if possible
+        final Object iniVal = spath.end.getValue();
+        
+        logger.log(Level.FINER, "source initial value = {0}", iniVal);
+        
+        // Sets directly from last element
+        tpath.end.setAndTransformValue(iniVal);
     } // end of bind
 
     /**
@@ -253,50 +261,52 @@ public class Binder {
      * 
      * @param options Binding options
      */
-    private static void expandKeys(final BindingOptionMap options) {
-	synchronized(options) {
-	    // Numeric
-	    if (options.containsKey(NumericBindingKey.BIGINTEGER_TO_INTEGER)) {
-		options.remove(NumericBindingKey.BIGINTEGER_TO_INTEGER);
+    private static BindingOptionMap expandKeys(final BindingOptionMap options) {
+        synchronized(options) {
+            // Numeric
+            if (options.containsKey(NumericBindingKey.BIGINTEGER_TO_INTEGER)) {
+                options.remove(NumericBindingKey.BIGINTEGER_TO_INTEGER);
 
-		options.add(BindingKey.INPUT_TRANSFORMER,
-			    BigIntegerToIntegerTransformer.getInstance()).
-		    add(BindingKey.OUTPUT_TRANSFORMER,
-			IntegerToBigIntegerTransformer.getInstance());
+                options.add(BindingKey.INPUT_TRANSFORMER,
+                            BigIntegerToIntegerTransformer.getInstance()).
+                    add(BindingKey.OUTPUT_TRANSFORMER,
+                        IntegerToBigIntegerTransformer.getInstance());
 
-	    } // end of if
+            } // end of if
 
-	    if (options.containsKey(NumericBindingKey.INTEGER_TO_BIGINTEGER)) {
-		options.remove(NumericBindingKey.INTEGER_TO_BIGINTEGER);
+            if (options.containsKey(NumericBindingKey.INTEGER_TO_BIGINTEGER)) {
+                options.remove(NumericBindingKey.INTEGER_TO_BIGINTEGER);
 
-		options.add(BindingKey.INPUT_TRANSFORMER,
-			    IntegerToBigIntegerTransformer.getInstance()).
-		    add(BindingKey.OUTPUT_TRANSFORMER,
-			BigIntegerToIntegerTransformer.getInstance());
+                options.add(BindingKey.INPUT_TRANSFORMER,
+                            IntegerToBigIntegerTransformer.getInstance()).
+                    add(BindingKey.OUTPUT_TRANSFORMER,
+                        BigIntegerToIntegerTransformer.getInstance());
 
-	    } // end of if
+            } // end of if
 
-	    // Text
-	    if (options.containsKey(TextBindingKey.CHAR_ARRAY_TO_STRING)) {
-		options.remove(TextBindingKey.CHAR_ARRAY_TO_STRING);
+            // Text
+            if (options.containsKey(TextBindingKey.CHAR_ARRAY_TO_STRING)) {
+                options.remove(TextBindingKey.CHAR_ARRAY_TO_STRING);
 
-		options.add(BindingKey.INPUT_TRANSFORMER,
-			    CharArrayToStringTransformer.getInstance()).
-		    add(BindingKey.OUTPUT_TRANSFORMER,
-			StringToCharArrayTransformer.getInstance());
+                options.add(BindingKey.INPUT_TRANSFORMER,
+                            CharArrayToStringTransformer.getInstance()).
+                    add(BindingKey.OUTPUT_TRANSFORMER,
+                        StringToCharArrayTransformer.getInstance());
 
-	    } // end of if
+            } // end of if
 
-	    if (options.containsKey(TextBindingKey.STRING_TO_CHAR_ARRAY)) {
-		options.remove(TextBindingKey.STRING_TO_CHAR_ARRAY);
+            if (options.containsKey(TextBindingKey.STRING_TO_CHAR_ARRAY)) {
+                options.remove(TextBindingKey.STRING_TO_CHAR_ARRAY);
 
-		options.add(BindingKey.INPUT_TRANSFORMER,
-			    StringToCharArrayTransformer.getInstance()).
-		    add(BindingKey.OUTPUT_TRANSFORMER,
-			CharArrayToStringTransformer.getInstance());
+                options.add(BindingKey.INPUT_TRANSFORMER,
+                            StringToCharArrayTransformer.getInstance()).
+                    add(BindingKey.OUTPUT_TRANSFORMER,
+                        CharArrayToStringTransformer.getInstance());
 
-	    } // end of if
-	} // end of sync
+            } // end of if
+        } // end of sync
+
+        return options;
     } // end of expandKeys
 
     /**
@@ -305,55 +315,56 @@ public class Binder {
      * all input booleans are true. Transformer is not retained.
      *
      * @param pathElmt Path element
+     * @param options Binding options
      * @return Aggregating value transformer
      */
-    protected static UnaryFunction getBooleanAndAggregateTransformer(final ObjectPathElement pathElmt) {
+    protected static UnaryFunction<Boolean,Boolean> getBooleanAndAggregateTransformer(final ObjectPathElement pathElmt, final BindingOptionMap options) {
 
-	final Logger logger = Logger.getLogger(/*LibraSwing*/"Melasse");
-	final Integer key = System.identityHashCode(pathElmt);
+        final Logger logger = getLogger(options);
+        final Integer key = System.identityHashCode(pathElmt);
 
-	logger.log(Level.FINER, "path element = {0}, key = {1}", 
-		   new Object[] { pathElmt, key });
+        logger.log(Level.FINER, "path element = {0}, key = {1}", 
+                   new Object[] { pathElmt, key });
 
-	UnaryFunction aggregator = null;
-	
-	synchronized(aggregators) {
-	    aggregator = aggregators.get(key);
+        UnaryFunction<Boolean,Boolean> aggregator = null;
+        
+        synchronized(aggregators) {
+            aggregator = aggregators.get(key);
 
-	    logger.log(Level.FINER, "aggregator = {0}", aggregator);
+            logger.log(Level.FINER, "aggregator = {0}", aggregator);
 
-	    if (aggregator != null) {
-		return aggregator;
-	    } // end of if
-	} // end of sync
+            if (aggregator != null) {
+                return aggregator;
+            } // end of if
+        } // end of sync
 
-	final Object object = pathElmt.getTargetObject();
-	final String property = pathElmt.getProperty();
+        final Object object = pathElmt.getTargetObject();
+        final String property = pathElmt.getProperty();
 
-	logger.log(Level.FINER,
-		   "target object = {0}, property = {1}",
-		   new Object[] { object, property });
+        logger.log(Level.FINER,
+                   "target object = {0}, property = {1}",
+                   new Object[] { object, property });
 
-	HashMap<String,Object> group = null;
+        HashMap<String,Integer> group = null;
 
-	synchronized(aggregateValues) {
-	    Integer okey = new Integer(System.identityHashCode(object));
-	    group = aggregateValues.get(okey);
+        synchronized(aggregateValues) {
+            final Integer okey = new Integer(System.identityHashCode(object));
+            group = aggregateValues.get(okey);
 
-	    if (group == null) {
-		group = new HashMap<String,Object>();
+            if (group == null) {
+                group = new HashMap<String,Integer>();
 
-		group.put(property, new Integer(0));
+                group.put(property, new Integer(0));
 
-		aggregateValues.put(okey, group);
-	    } // end of if
-	} // end of sync
+                aggregateValues.put(okey, group);
+            } // end of if
+        } // end of sync
 
-	aggregator = new AndClauseTransformer(group, property);
-	
-	aggregators.put(key, aggregator);
+        aggregator = new AndClauseTransformer(group, property);
+        
+        aggregators.put(key, aggregator);
 
-	return aggregator;
+        return aggregator;
     } // end of getBooleanAndAggregateTransformer
 
     /**
@@ -361,53 +372,52 @@ public class Binder {
      *
      * @param object Source of object |path|
      * @param path Object path, with part separated by '.'
+     * @param options Binding options
      * @return Object path
      */
-    protected static ObjectPath makeObjectPath(Object object, String path) {
-	Logger logger = getLogger();
+    protected static ObjectPath makeObjectPath(final Object object, 
+                                               final String path,
+                                               final BindingOptionMap options) {
+        
+        final Logger logger = getLogger(options);
 
-	logger.log(Level.FINER, "object = {0}, path = {1}",
-		   new Object[] { object, path });
+        logger.log(Level.FINER, "object = {0}, path = {1}",
+                   new Object[] { object, path });
 
-	ObjectPathElement firstObjectElement = null;
-	ObjectPathElement previousElmt = null;
-	Object parentObject = object;
-	String objectPart = path;
-	final StringTokenizer tok = new StringTokenizer(objectPart, ".");
-	int toklen = tok.countTokens();
-	
-	ObjectPathElement ope;
-	String pname;
-	for (int i = 1; tok.hasMoreTokens(); i++) {
-	    objectPart = tok.nextToken();
-	    ope = new ObjectPathElement(parentObject, objectPart);
+        ObjectPathElement firstObjectElement = null;
+        ObjectPathElement previousElmt = null;
+        Object parentObject = object;
+        String objectPart = path;
+        final StringTokenizer tok = new StringTokenizer(objectPart, ".");
+        int toklen = tok.countTokens();
+        
+        ObjectPathElement ope;
+        String pname;
+        for (int i = 1; tok.hasMoreTokens(); i++) {
+            objectPart = tok.nextToken();
+            ope = new ObjectPathElement(parentObject, objectPart, options);
 
-	    if (i == 1) { // keep first
-		firstObjectElement = ope;
-	    } // end of if
+            if (i == 1) { // keep first
+                firstObjectElement = ope;
+            } // end of if
 
-	    if (previousElmt != null) {
-		previousElmt.setNextElement(ope);
-	    } // end of if
+            if (previousElmt != null) {
+                previousElmt.setNextElement(ope);
+            } // end of if
 
-	    previousElmt = ope;
+            previousElmt = ope;
 
-	    if (parentObject != null) {
-		pname = ObjectPathElement.normalizeProperty(objectPart);
+            if (parentObject != null) {
+                pname = ObjectPathElement.normalizeProperty(objectPart);
 
-		parentObject = getValue(parentObject, pname);
-	    } // end of if
-	} // end of for
+                parentObject = getValue(parentObject, pname);
+            } // end of if
+        } // end of for
 
-	logger.log(Level.FINER, "first = {0}, last = {1}",
-		   new Object[] { firstObjectElement, previousElmt });
+        logger.log(Level.FINER, "first = {0}, last = {1}",
+                   new Object[] { firstObjectElement, previousElmt });
 
-	ObjectPath p = new ObjectPath();
-
-	p.start = firstObjectElement;
-	p.end = previousElmt;
-
-	return p;
+        return new ObjectPath(firstObjectElement, previousElmt);
     } // end of makeObjectPath
 
     /**
@@ -420,90 +430,90 @@ public class Binder {
      * @todo Restricted addPropertyChangeListener
      */
     protected static boolean addListener(final Object object,
-					 final BindingListenerCategory category,
-					 final Object listener) {
-	
-	Logger logger = Logger.getLogger(/*LibraSwing*/"Melasse");
+                                         final BindingListenerCategory category,
+                                         final Object listener,
+                                         final BindingOptionMap options) {
 
-	logger.log(Level.FINER,
-		   "object = {0}, category = {1}, listener = {2}",
-		   new Object[] { object, category, listener });
+        final Logger logger = getLogger(options);
+        
+        logger.log(Level.FINER,
+                   "object = {0}, category = {1}, listener = {2}",
+                   new Object[] { object, category, listener });
 
-	final Class objectClass = object.getClass();
-	final String className = objectClass.getName();
+        final Class objectClass = object.getClass();
+        final String className = objectClass.getName();
 
-	logger.log(Level.FINER, "class name = {0}", className);
+        logger.log(Level.FINER, "class name = {0}", className);
 
-	Method meth = null;
+        Method meth = null;
 
-	synchronized(addListeners) {
-	    HashMap<BindingListenerCategory,Method> categories = null;
+        synchronized(addListeners) {
+            HashMap<BindingListenerCategory,Method> categories = null;
 
-	    if (!addListeners.containsKey(className)) {
-		categories = new HashMap<BindingListenerCategory,Method>();
+            if (!addListeners.containsKey(className)) {
+                categories = new HashMap<BindingListenerCategory,Method>();
 
-		addListeners.put(className, categories);
-	    } else {
-		categories = addListeners.get(className);
-	    } // end of if
+                addListeners.put(className, categories);
+            } else {
+                categories = addListeners.get(className);
+            } // end of if
 
-	    if (!categories.containsKey(category)) {
-		final String methodName = category.getAddMethodName();
+            if (!categories.containsKey(category)) {
+                final String methodName = category.getAddMethodName();
 
-		logger.log(Level.FINER,
-			   "expected method name = {0}",
-			   methodName);
+                logger.log(Level.FINER,
+                           "expected method name = {0}", methodName);
 
-		try {
-		    Method[] methods = objectClass.getMethods();
+                try {
+                    Method[] methods = objectClass.getMethods();
 
-		    for (int i = 0; i < methods.length && 
-			     meth == null; i++) {
+                    for (int i = 0; i < methods.length && 
+                             meth == null; i++) {
 
-			logger.log(Level.FINER,
-				   "method = {0}", methods[i]);
+                        logger.log(Level.FINER,
+                                   "method = {0}", methods[i]);
 
-			if (methodName.equals(methods[i].getName()) &&
-			    methods[i].getParameterTypes().length == 1) {
+                        if (methodName.equals(methods[i].getName()) &&
+                            methods[i].getParameterTypes().length == 1) {
 
-			    logger.finer("Method found");
+                            logger.finer("Method found");
 
-			    meth = methods[i];
-			} // end of if
-		    } // end of for
-		} catch (Exception e) {
-		    logger.log(Level.SEVERE,
-			       "Fails to get method to add listener: {0}",
-			       e.getMessage());
+                            meth = methods[i];
+                        } // end of if
+                    } // end of for
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE,
+                               "Fails to get method to add listener: {0}",
+                               e.getMessage());
 
-		} // end of catch
+                } // end of catch
 
-		categories.put(category, meth);
-	    } else {
-		meth = categories.get(category);
-	    } // end of else
+                categories.put(category, meth);
+            } else {
+                meth = categories.get(category);
+            } // end of else
 
-	    logger.log(Level.FINER, "method = {0}", meth);
-	} // end of sync
+            logger.log(Level.FINER, "method = {0}", meth);
+        } // end of sync
 
-	if (meth == null) {
-	    logger.log(Level.WARNING, 
-		       "Cannot find method {0} for class: {1}",
-		       new Object[] { category.getAddMethodName(), className });
-	    
-	    return false;
-	} // end of if
-	
-	try {
-	    meth.invoke(object, new Object[] { listener });
-	} catch (Exception e) {
-	    logger.log(Level.SEVERE,
-		       "Fails to add listener", e);
-	    
-	    logger.log(Level.SEVERE, "method = {0}", meth);
-	} // end of catch
+        if (meth == null) {
+            logger.log(Level.WARNING, 
+                       "Cannot find method {0} for class: {1}",
+                       new Object[] { category.getAddMethodName(), className });
+            
+            return false;
+        } // end of if
+        
+        try {
+            meth.invoke(object, new Object[] { listener });
+        } catch (Exception e) {
+            logger.log(Level.SEVERE,
+                       "Fails to add listener", e);
+            
+            logger.log(Level.SEVERE, "method = {0}", meth);
+        } // end of catch
 
-	return true;
+        return true;
     } // end of addListener
 
     /**
@@ -512,98 +522,91 @@ public class Binder {
      * @param object Target object
      * @param category Listener category
      * @param listener Listener to be removed
+     * @param options Binding options
      * @see BindingListenerCategory
      */
-    protected static boolean removeListener(Object object,
-					    BindingListenerCategory category,
-					    Object listener) {
-	
-	Logger logger = Logger.getLogger(/*LibraSwing*/"Melasse");
+    protected static boolean removeListener(final Object object, final BindingListenerCategory category, final Object listener, final BindingOptionMap options) {
 
-	logger.log(Level.FINER,
-		   "object = {0}, category = {1}, listener = {2}",
-		   new Object[] { object, category, listener });
+        final Logger logger = getLogger(options);
+        
+        logger.log(Level.FINER,
+                   "object = {0}, category = {1}, listener = {2}",
+                   new Object[] { object, category, listener });
 
-	final Class objectClass = object.getClass();
-	final String className = objectClass.getName();
+        final Class objectClass = object.getClass();
+        final String className = objectClass.getName();
 
-	logger.log(Level.FINER,
-		   "className = {0}", className);
+        logger.log(Level.FINER, "className = {0}", className);
 
-	Method meth = null;
+        Method meth = null;
 
-	synchronized(removeListeners) {
-	    HashMap<BindingListenerCategory,Method> categories = null;
+        synchronized(removeListeners) {
+            HashMap<BindingListenerCategory,Method> categories = null;
 
-	    if (!removeListeners.containsKey(className)) {
-		categories = new HashMap<BindingListenerCategory,Method>();
+            if (!removeListeners.containsKey(className)) {
+                categories = new HashMap<BindingListenerCategory,Method>();
 
-		removeListeners.put(className, categories);
-	    } else {
-		categories = removeListeners.get(className);
-	    } // end of if
+                removeListeners.put(className, categories);
+            } else {
+                categories = removeListeners.get(className);
+            } // end of if
 
-	    if (!categories.containsKey(category)) {
-		final String methodName = category.getRemoveMethodName();
+            if (!categories.containsKey(category)) {
+                final String methodName = category.getRemoveMethodName();
 
-		logger.log(Level.FINER,
-			   "expected method name = {0}",
-			   methodName);
+                logger.log(Level.FINER,
+                           "expected method name = {0}", methodName);
 
-		try {
-		    Method[] methods = objectClass.getMethods();
+                try {
+                    Method[] methods = objectClass.getMethods();
 
-		    for (int i = 0; i < methods.length && 
-			     meth == null; i++) {
+                    for (int i = 0; i < methods.length && 
+                             meth == null; i++) {
 
-			logger.log(Level.FINER,
-				   "method = {0}", methods[i]);
+                        logger.log(Level.FINER, "method = {0}", methods[i]);
 
-			if (methodName.equals(methods[i].getName()) &&
-			    methods[i].getParameterTypes().length == 1) {
+                        if (methodName.equals(methods[i].getName()) &&
+                            methods[i].getParameterTypes().length == 1) {
 
-			    logger.finer("Method found");
+                            logger.finer("Method found");
 
-			    meth = methods[i];
-			} // end of if
-		    } // end of for
-		} catch (Exception e) {
-		    logger.log(Level.SEVERE,
-			       "Fails to get method to remove listener: {0}",
-			       e.getMessage());
+                            meth = methods[i];
+                        } // end of if
+                    } // end of for
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE,
+                               "Fails to get method to remove listener: {0}",
+                               e.getMessage());
 
-		} // end of catch
+                } // end of catch
 
-		categories.put(category, meth);
-	    } else {
-		meth = categories.get(category);
-	    } // end of else
-	} // end of sync
+                categories.put(category, meth);
+            } else {
+                meth = categories.get(category);
+            } // end of else
+        } // end of sync
 
-	logger.log(Level.FINER, "method = {0}", meth);
+        logger.log(Level.FINER, "method = {0}", meth);
 
-	if (meth == null) {
-	    logger.log(Level.WARNING,
-		       "Fails to get method {0} for class: {1}",
-		       new Object[] { category.getRemoveMethodName(), className });
+        if (meth == null) {
+            logger.log(Level.WARNING,
+                       "Fails to get method {0} for class: {1}",
+                       new Object[] { category.getRemoveMethodName(), className });
 
-	    return false;
-	} // end of if
+            return false;
+        } // end of if
 
-	try {
-	    meth.invoke(object, new Object[] { listener });
-	} catch (Exception e) {
-	    logger.throwing("melasse.Binder",
-			    "removeListener", 
-			    e);
+        try {
+            meth.invoke(object, new Object[] { listener });
+        } catch (Exception e) {
+            logger.throwing("melasse.Binder", "removeListener",  e);
 
-	    logger.log(Level.SEVERE,
-		       "Fails to remove listener: {0}", 
-		       e.getMessage());
+            logger.log(Level.SEVERE,
+                       "Fails to remove listener: {0}", e.getMessage());
 
-	} // end of catch
+        } // end of catch
 
-	return true;
+        return true;
     } // end of removeListener
 
     /**
@@ -614,103 +617,98 @@ public class Binder {
      * @param value New property value
      */
     protected static void setValue(final Object object,
-				   final String property,
-				   final Object value) {
+                                   final String property,
+                                   final Object value,
+                                   final BindingOptionMap options) {
 
-	Logger logger = Logger.getLogger(/*LibraSwing*/"Melasse");
+        final Logger logger = getLogger(options);
 
-	logger.log(Level.FINER,
-		   "object = {0}, property = {1}, value = {2}",
-		   new Object[] {
-		       object, property, value
-		   });
+        logger.log(Level.FINER,
+                   "object = {0}, property = {1}, value = {2}",
+                   new Object[] { object, property, value });
 
-	final Class objectClass = object.getClass();
-	final String className = objectClass.getName();
+        final Class objectClass = object.getClass();
+        final String className = objectClass.getName();
 
-	logger.log(Level.FINER, "class name = {0}", className);
+        logger.log(Level.FINER, "class name = {0}", className);
 
-	Method setter = null;
+        Method setter = null;
 
-	synchronized(setters) {
-	    HashMap<String,Method> classSetters = null;
+        synchronized(setters) {
+            HashMap<String,Method> classSetters = null;
 
-	    if (!setters.containsKey(className)) {
-		classSetters = new HashMap<String,Method>(1);
+            if (!setters.containsKey(className)) {
+                classSetters = new HashMap<String,Method>(1);
 
-		setters.put(className, classSetters);
+                setters.put(className, classSetters);
 
-		logger.finer("Will load setters");
+                logger.finer("Will load setters");
 
-		try {
-		    Method[] methods = objectClass.getMethods();
+                try {
+                    Method[] methods = objectClass.getMethods();
 
-		    String name;
-		    for (int i = 0; i < methods.length; i++) {
-			name = methods[i].getName();
+                    String name;
+                    for (int i = 0; i < methods.length; i++) {
+                        name = methods[i].getName();
 
-			logger.log(Level.FINER,
-				   "name = {0}", name);
+                        logger.log(Level.FINER, "name = {0}", name);
 
-			if (name.startsWith("set") &&
-			    methods[i].getParameterTypes().length == 1) {
+                        if (name.startsWith("set") &&
+                            methods[i].getParameterTypes().length == 1) {
 
-			    name = Character.toLowerCase(name.charAt(3)) +
-				name.substring(4);
+                            name = Character.toLowerCase(name.charAt(3)) +
+                                name.substring(4);
 
-			    logger.log(Level.FINER,
-				       "setter property name = {0}", name);
+                            logger.log(Level.FINER,
+                                       "setter property name = {0}", name);
 
-			    classSetters.put(name, methods[i]);
-			} // end of if
-		    } // end of for
-		} catch (Exception e) {
-		    logger.log(Level.SEVERE,
-			       "Fails to get setter: {0}",
-			       e.getMessage());
+                            classSetters.put(name, methods[i]);
+                        } // end of if
+                    } // end of for
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE,
+                               "Fails to get setter: {0}", e.getMessage());
 
-		    return;
-		} // end of catch
-	    } else {
-		classSetters = setters.get(className);
-	    } // end of else
+                    return;
+                } // end of catch
+            } else {
+                classSetters = setters.get(className);
+            } // end of else
 
-	    logger.log(Level.FINER, "classSetters = {0}", classSetters);
+            logger.log(Level.FINER, "classSetters = {0}", classSetters);
 
-	    if (!classSetters.containsKey(property)) {
-		logger.log(Level.WARNING,
-			   "Target object does not support setting value for property {0}: {1}", new Object[] { property, object });
+            if (!classSetters.containsKey(property)) {
+                logger.log(Level.WARNING, "Target object does not support setting value for property {0}: {1}", new Object[] { property, object });
 
-		return;
-	    } // end of if
+                return;
+            } // end of if
 
-	    setter = classSetters.get(property);
-	} // end of sync
+            setter = classSetters.get(property);
+        } // end of sync
 
-	logger.log(Level.FINER, "setter = {0}", setter);
+        logger.log(Level.FINER, "setter = {0}", setter);
 
-	try {
-	    setter.invoke(object, new Object[] { value });
-	} catch (Exception e) {
-	    Throwable c = null;
+        try {
+            setter.invoke(object, new Object[] { value });
+        } catch (Exception e) {
+            Throwable c = null;
 
-	    if (!(e instanceof InvocationTargetException) ||
-		(c = e.getCause()) == null) {
+            if (!(e instanceof InvocationTargetException) ||
+                (c = e.getCause()) == null) {
 
-		c = e;
-	    } // end of if
-		    
-	    logger.log(Level.SEVERE,
-		       "Fails to set property value", c);
+                c = e;
+            } // end of if
+                    
+            logger.log(Level.SEVERE, "Fails to set property value", c);
 
-	    final String type = (value == null) ? "<nulltype>"
+            final String type = (value == null) ? "<nulltype>"
                 : value.getClass().toString();
 
-	    logger.log(Level.SEVERE,
-		       "target class = {0}, property = {1}, value = {2} ({3})",
-		       new Object[] { className, property, value, type });
+            logger.log(Level.SEVERE,
+                       "target class = {0}, property = {1}, value = {2} ({3})",
+                       new Object[] { className, property, value, type });
 
-	} // end of catch
+        } // end of catch
     } // end of setValue
 
     /**
@@ -721,102 +719,101 @@ public class Binder {
      * @return Value for |property| on target |object|
      */
     protected static Object getValue(final Object object,
-				     final String property) {
+                                     final String property) {
 
-	Logger logger = Logger.getLogger("Melasse");
+        final Logger logger = defaultLogger;
 
-	logger.log(Level.FINER, "object = {0}, property = {1}",
-		   new Object[] { object, property });
+        logger.log(Level.FINER, "object = {0}, property = {1}",
+                   new Object[] { object, property });
 
-	final Class objectClass = object.getClass();
-	final String className = objectClass.getName();
+        final Class objectClass = object.getClass();
+        final String className = objectClass.getName();
 
-	logger.log(Level.FINER, "className = {0}", className);
+        logger.log(Level.FINER, "className = {0}", className);
 
-	Method getter = null;
+        Method getter = null;
 
-	synchronized(getters) {
-	    HashMap<String,Method> classGetters = null;
+        synchronized(getters) {
+            HashMap<String,Method> classGetters = null;
 
-	    if (!getters.containsKey(className)) {
-		classGetters = new HashMap<String,Method>(1);
+            if (!getters.containsKey(className)) {
+                classGetters = new HashMap<String,Method>(1);
 
-		getters.put(className, classGetters);
+                getters.put(className, classGetters);
 
-		try {
-		    Method[] methods = objectClass.getMethods();
+                try {
+                    Method[] methods = objectClass.getMethods();
 
-		    String name;
-		    int plen;
-		    for (int i = 0; i < methods.length; i++) {
-			name = methods[i].getName();
-			plen = methods[i].getParameterTypes().length;
+                    String name;
+                    int plen;
+                    for (int i = 0; i < methods.length; i++) {
+                        name = methods[i].getName();
+                        plen = methods[i].getParameterTypes().length;
 
-			logger.log(Level.FINER, "name = {0}, plen = {1}", 
-				   new Object[] { name, new Integer(plen) });
+                        logger.log(Level.FINER, "name = {0}, plen = {1}", 
+                                   new Object[] { name, new Integer(plen) });
 
-			if (name.startsWith("get") && plen == 0) {
-			    name = Character.toLowerCase(name.charAt(3)) +
-				name.substring(4);
+                        if (name.startsWith("get") && plen == 0) {
+                            name = Character.toLowerCase(name.charAt(3)) +
+                                name.substring(4);
 
-			    logger.log(Level.FINER,
-				       "property name = {0}", name);
+                            logger.log(Level.FINER,
+                                       "property name = {0}", name);
 
-			    classGetters.put(name, methods[i]);
-			} // end of if
+                            classGetters.put(name, methods[i]);
+                        } // end of if
 
-			if (name.startsWith("is") && plen == 0) {
-			    name = Character.toLowerCase(name.charAt(2)) +
-				name.substring(3);
+                        if (name.startsWith("is") && plen == 0) {
+                            name = Character.toLowerCase(name.charAt(2)) +
+                                name.substring(3);
 
-			    logger.log(Level.FINER,
-				       "property name = {0}", name);
+                            logger.log(Level.FINER,
+                                       "property name = {0}", name);
 
-			    classGetters.put(name, methods[i]);
-			} // end of if
-		    } // end of for
-		} catch (Exception e) {
-		    logger.log(Level.SEVERE,
-			       "Fails to get getter: {0}",
-			       e.getMessage());
+                            classGetters.put(name, methods[i]);
+                        } // end of if
+                    } // end of for
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE,
+                               "Fails to get getter: {0}",
+                               e.getMessage());
 
-		    return null;
-		} // end of catch
-	    } else {
-		classGetters = getters.get(className);
-	    } // end of else
+                    return null;
+                } // end of catch
+            } else {
+                classGetters = getters.get(className);
+            } // end of else
 
-	    logger.log(Level.FINER,
-		       "classGetters = {0}", classGetters);
+            logger.log(Level.FINER, "classGetters = {0}", classGetters);
 
-	    if (!classGetters.containsKey(property)) {
-		logger.log(Level.WARNING,
-			   "Target object does not support getting value for property: {0}, target object = {1}", 
-			   new Object[] { 
-			       property, 
-			       object.getClass().getName() +
-			       '@' + System.identityHashCode(object)
-			   });
+            if (!classGetters.containsKey(property)) {
+                logger.log(Level.WARNING,
+                           "Target object does not support getting value for property: {0}, target object = {1}", 
+                           new Object[] { 
+                               property, 
+                               object.getClass().getName() +
+                               '@' + System.identityHashCode(object)
+                           });
 
-		return null;
-	    } // end of if
+                return null;
+            } // end of if
 
-	    getter = classGetters.get(property);
-	} // end of sync
+            getter = classGetters.get(property);
+        } // end of sync
 
-	logger.log(Level.FINER, "getter = {0}", getter);
+        logger.log(Level.FINER, "getter = {0}", getter);
 
-	try {
-	    return getter.invoke(object, new Object[0]);
-	} catch (Exception e) {
-	    logger.log(Level.SEVERE, "Fails to get property", e);
+        try {
+            return getter.invoke(object, new Object[0]);
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Fails to get property", e);
 
-	    logger.log(Level.SEVERE,
-		       "Fails to get property value: {0}, property = {1}",
-		       new Object[] { e.getMessage(), property });
+            logger.log(Level.SEVERE,
+                       "Fails to get property value: {0}, property = {1}",
+                       new Object[] { e.getMessage(), property });
 
-	    return null;
-	} // end of catch
+            return null;
+        } // end of catch
     } // end of getValue
 
     // --- Inner classes ---
@@ -827,56 +824,68 @@ public class Binder {
      * @author Cedric Chantepie 
      */
     protected static class ObjectPath {
-	// --- Properties ---
+        // --- Properties ---
 
-	/**
-	 * Path start
-	 */
-	public ObjectPathElement start = null;
+        /**
+         * Path start
+         */
+        public final ObjectPathElement start;
 
-	/**
-	 * Path end
-	 */
-	public ObjectPathElement end = null;
+        /**
+         * Path end
+         */
+        public final ObjectPathElement end;
 
-	// --- 
+        // --- Constructors ---
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public String toString() {
-	    if (start == null) {
-		return "<invalid>";
-	    } // end of if
+        /**
+         * Bulk constructor.
+         */
+        public ObjectPath(final ObjectPathElement start,
+                          final ObjectPathElement end) {
 
-	    // ---
+            this.start = start;
+            this.end = end;
+        } // end of <init>
 
-	    Object targetObject = start.getTargetObject();
-	    String className = targetObject.getClass().getName();
-	    StringBuffer buff = new StringBuffer(className);
+        // --- 
 
-	    buff.append('@').
-		append(System.identityHashCode(targetObject)).
-		append('.').append(start.getProperty());
+        /**
+         * {@inheritDoc}
+         */
+        public String toString() {
+            if (start == null) {
+                return "<invalid>";
+            } // end of if
 
-	    ObjectPathElement e = start;
-	    while ((e = e.getNext()) != null) {
-		targetObject = e.getTargetObject();
+            // ---
 
-		if (targetObject != null) {
-		    className = targetObject.getClass().getName();
-		    buff.append('[').append(className).
-			append('@').
-			append(System.identityHashCode(targetObject)).
-			append(']');
+            Object targetObject = start.getTargetObject();
+            String className = targetObject.getClass().getName();
+            final StringBuffer buff = new StringBuffer(className);
 
-		} // end of if
+            buff.append('@').
+                append(System.identityHashCode(targetObject)).
+                append('.').append(start.getProperty());
 
-		buff.append('.').append(e.getProperty());
-	    } // end of if
+            ObjectPathElement e = start;
+            while ((e = e.getNext()) != null) {
+                targetObject = e.getTargetObject();
 
-	    return buff.toString();
-	} // end of toString
+                if (targetObject != null) {
+                    className = targetObject.getClass().getName();
+                    buff.append('[').append(className).
+                        append('@').
+                        append(System.identityHashCode(targetObject)).
+                        append(']');
+
+                } // end of if
+
+                buff.append('.').append(e.getProperty());
+            } // end of if
+
+            return buff.toString();
+        } // end of toString
     } // end of class ObjectPath
 
     /**
@@ -888,75 +897,75 @@ public class Binder {
     private static class AndClauseTransformer 
         implements UnaryFunction<Boolean,Boolean> {
 
-	// --- Properties ---
+        // --- Properties ---
 
-	/**
-	 * Aggregated property
-	 */
-	private final String property;
+        /**
+         * Aggregated property
+         */
+        private final String property;
 
-	/**
-	 * Property group
-	 * @todo Weak reference
-	 * @todo Custom class
-	 */
-	private final HashMap<String,Object> group;
+        /**
+         * Property group
+         * @todo Weak reference
+         * @todo Custom class
+         */
+        private final HashMap<String,Integer> group;
 
-	/**
-	 * Last value
-	 */
-	private Boolean lastValue = null;
+        /**
+         * Last value
+         */
+        private Boolean lastValue = null;
 
-	// --- Constructors ---
+        // --- Constructors ---
 
-	/**
-	 * Bulk constructor.
-	 *
-	 * @param group Property group
-	 * @param property Property name
-	 */
-	public AndClauseTransformer(final HashMap<String,Object> group,
-				    final String property) {
+        /**
+         * Bulk constructor.
+         *
+         * @param group Property group
+         * @param property Property name
+         */
+        public AndClauseTransformer(final HashMap<String,Integer> group,
+                                    final String property) {
 
-	    this.group = group;
-	    this.property = property;
-	} // end of <init>
-	
-	// ---
+            this.group = group;
+            this.property = property;
+        } // end of <init>
+        
+        // ---
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public Boolean apply(final Boolean value) {
-	    synchronized(this.group) {
-		Integer fnum = (Integer) this.group.get(this.property);
+        /**
+         * {@inheritDoc}
+         */
+        public Boolean apply(final Boolean value) {
+            synchronized(this.group) {
+                Integer fnum = this.group.get(this.property);
 
-		if ((this.lastValue == null && value == null) ||
-		    (this.lastValue != null && this.lastValue.equals(value))) {
+                if ((this.lastValue == null && value == null) ||
+                    (this.lastValue != null && this.lastValue.equals(value))) {
 
-		    return (fnum.intValue() == 0);
-		} // end of if
+                    return (fnum.intValue() == 0);
+                } // end of if
 
-		// ---
+                // ---
 
-		if (fnum == null) {
-		    fnum = new Integer(0);
-		} // end of if
+                if (fnum == null) {
+                    fnum = new Integer(0);
+                } // end of if
 
-		if (Boolean.FALSE.equals(value)) {
-		    fnum = new Integer(fnum.intValue()+1);
-		} else if (fnum > 0 && 
-			   Boolean.FALSE.equals(this.lastValue)) { // true
+                if (Boolean.FALSE.equals(value)) {
+                    fnum = new Integer(fnum.intValue()+1);
+                } else if (fnum > 0 && 
+                           Boolean.FALSE.equals(this.lastValue)) { // true
 
-		    fnum = new Integer(fnum.intValue()-1);
-		} // end of else if
+                    fnum = new Integer(fnum.intValue()-1);
+                } // end of else if
 
-		this.group.put(this.property, fnum);
-		this.lastValue = value;
+                this.group.put(this.property, fnum);
+                this.lastValue = value;
 
-		// true only is no false
-		return (fnum.intValue() == 0);
-	    } // end of sync
-	} // end of transform
+                // true only is no false
+                return (fnum.intValue() == 0);
+            } // end of sync
+        } // end of transform
     } // end class AndClauseTransformer
 } // end of class Binder

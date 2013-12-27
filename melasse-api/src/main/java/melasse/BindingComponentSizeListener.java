@@ -14,8 +14,7 @@ import java.awt.event.ComponentEvent;
  * @author Cedric Chantepie 
  */
 class BindingComponentSizeListener 
-    extends BindingListenerSupport 
-    implements ComponentListener {
+    extends BindingListenerSupport implements ComponentListener {
 
     // --- Properties ---
 
@@ -32,8 +31,10 @@ class BindingComponentSizeListener
      *
      * @param setter Setter used to propagate value
      */
-    protected BindingComponentSizeListener(Setter setter) {
-	super(setter);
+    protected BindingComponentSizeListener(final Setter setter,
+                                           final BindingOptionMap options) {
+
+	super(setter, options);
     } // end of <init>
 
     // ---
@@ -41,14 +42,14 @@ class BindingComponentSizeListener
     /**
      * Listens initial size at showing.
      */
-    public void componentShown(ComponentEvent evt) {
-	logger.log(Level.FINER, "evt = {0}", evt);
+    public void componentShown(final ComponentEvent evt) {
+	logger.log(Level.FINER, "event = {0}", evt);
 
-	Component component = evt.getComponent();
+	final Component component = evt.getComponent();
 
 	logger.log(Level.FINER, "component = {0}", component);
 
-	Dimension s = component.getSize();
+	final Dimension s = component.getSize();
 
 	logger.log(Level.FINER, "component size = {0}", s);
 
@@ -58,14 +59,14 @@ class BindingComponentSizeListener
     /**
      * Size has changed.
      */
-    public void componentResized(ComponentEvent evt) {
-	logger.log(Level.FINER, "evt = {0}", evt);
+    public void componentResized(final ComponentEvent evt) {
+	logger.log(Level.FINER, "event = {0}", evt);
 
-	Component component = evt.getComponent();
+	final Component component = evt.getComponent();
 
 	logger.log(Level.FINER, "component = {0}", component);
 
-	Dimension s = component.getSize();
+	final Dimension s = component.getSize();
 
 	logger.log(Level.FINER, "component size = {0}", s);
 

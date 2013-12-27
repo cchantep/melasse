@@ -27,8 +27,10 @@ class BindingKeyListener
      *
      * @param setter Setter used to propagate value
      */
-    protected BindingKeyListener(Setter setter) {
-	super(setter);
+    protected BindingKeyListener(final Setter setter, 
+                                 final BindingOptionMap options) {
+
+	super(setter, options);
     } // end of <init>
 
     // ---
@@ -47,12 +49,11 @@ class BindingKeyListener
      * Changes object property, using transformer if given, 
      * from text component value change.
      */
-    public void keyReleased(KeyEvent evt) {
-	this.logger.log(Level.FINER,
-			"evt = {0}", evt);
+    public void keyReleased(final KeyEvent evt) {
+	this.logger.log(Level.FINER, "event = {0}", evt);
 
 	String sourceValue = null;
-	Object source = evt.getSource();
+	final Object source = evt.getSource();
 
 	this.logger.log(Level.FINER, 
 			"source = {0}, sourceValue = {1}", 
@@ -64,8 +65,7 @@ class BindingKeyListener
 	    sourceValue = ((JTextComponent) source).getText();
 	} else {
 	    this.logger.log(Level.WARNING,
-			    "Unsupported text component: {0}",
-			    source);
+			    "Unsupported text component: {0}", source);
 
 	    return;
 	} // end of else

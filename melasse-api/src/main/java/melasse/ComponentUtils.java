@@ -22,9 +22,12 @@ import java.awt.Dimension;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import org.jdesktop.layout.GroupLayout;
+import javax.swing.GroupLayout;
+
+import static javax.swing.SwingConstants.HORIZONTAL;
+import static javax.swing.SwingConstants.VERTICAL;
 
 /**
  * Utility class for UI components.
@@ -48,18 +51,6 @@ public class ComponentUtils {
 	groups = new ArrayList<ComponentGroup>();
     } // end of <static>
 
-    // --- Constants ---
-
-    /**
-     * Horizontal dimension
-     */
-    public static final int HORIZONTAL = GroupLayout.HORIZONTAL;
-
-    /**
-     * Vertical dimension
-     */
-    public static final int VERTICAL = GroupLayout.VERTICAL;
-
     // ---
 
     /**
@@ -73,9 +64,9 @@ public class ComponentUtils {
      * @see #VERTICAL
      * @todo MINIMIZE flag
      */
-    public static void linkSize(int flags, 
-				Object[] pathBases,
-				String[] paths) {
+    public static void linkSize(final int flags, 
+				final Object[] pathBases,
+				final String[] paths) {
 
 	Logger logger = Logger.getLogger(/*LibraSwing*/"Melasse");
 
@@ -90,21 +81,18 @@ public class ComponentUtils {
 
 	// ---
 
-	ArrayList<WeakReference> baseRefs = 
-	    new ArrayList<WeakReference>(pathBases.length);
+	final ArrayList<WeakReference<Object>> baseRefs = 
+	    new ArrayList<WeakReference<Object>>(pathBases.length);
 
-	ArrayList<String> pathList = 
-	    new ArrayList<String>(paths.length);
+	final ArrayList<String> pathList = new ArrayList<String>(paths.length);
 
 	for (int i = 0; i < pathBases.length; i++) {
-	    baseRefs.add(new WeakReference(pathBases[i]));
+	    baseRefs.add(new WeakReference<Object>(pathBases[i]));
 	    pathList.add(paths[i]);
 	} // end of for
 
-	ComponentGroup grp = 
-	    new ComponentGroup(flags, 
-			       baseRefs,
-			       pathList);
+	final ComponentGroup grp = 
+            new ComponentGroup(flags, baseRefs, pathList);
 
 	logger.log(Level.FINER, "component group = {0}", grp);
 
@@ -123,8 +111,7 @@ public class ComponentUtils {
      * @author Cedric Chantepie 
      */
     public static class ComponentGroup 
-	extends ComponentAdapter 
-	implements ObjectPathListener {
+	extends ComponentAdapter implements ObjectPathListener {
 
 	// --- Properties ---
 
@@ -135,7 +122,7 @@ public class ComponentUtils {
 	/**
 	 * Weak references to objects used as path bases
 	 */
-	private ArrayList<WeakReference> baseRefs = null;
+	private ArrayList<WeakReference<Object>> baseRefs = null;
 
 	/**
 	 * Paths evaluated from base objects
@@ -161,17 +148,17 @@ public class ComponentUtils {
 	/**
 	 * Component whose initial size is common one
 	 */
-	private WeakReference componentRef = null;
+	private WeakReference<Object> componentRef = null;
 
 	/**
 	 * Group logger
 	 */
-	private Logger logger = null;
+	private final Logger logger;
 
 	/**
 	 * Property change support
 	 */
-	private PropertyChangeSupport pcs = null;
+	private final PropertyChangeSupport pcs;
 
 	// --- Constructors ---
 
@@ -185,7 +172,7 @@ public class ComponentUtils {
 	 * @see #VERTICAL
 	 */
 	protected ComponentGroup(int flags,
-				 ArrayList<WeakReference> baseRefs,
+				 ArrayList<WeakReference<Object>> baseRefs,
 				 ArrayList<String> paths) {
 
 	    if (baseRefs == null) {
@@ -205,7 +192,7 @@ public class ComponentUtils {
 	    this.flags = flags;
 
 	    this.pcs = new PropertyChangeSupport(this);
-	    this.logger = Logger.getLogger(/*LibraSwing*/"Melasse");
+	    this.logger = Logger.getLogger("Melasse");
 
 	    this.logger.finer("Inited");
 	} // end of <init>
@@ -255,12 +242,13 @@ public class ComponentUtils {
 
 	    synchronized(this.baseRefs) {
 		synchronized(this.paths) {
-		    Iterator<WeakReference> iter = this.baseRefs.iterator();
+		    final Iterator<WeakReference<Object>> iter = 
+                        this.baseRefs.iterator();
 		    
 		    this.observedPaths = 
 			new ArrayList<Binder.ObjectPath>(this.paths.size());
 		    
-		    WeakReference r;
+		    WeakReference<Object> r;
 		    Object base;
 		    String path;
 		    String[] ps;
@@ -277,7 +265,7 @@ public class ComponentUtils {
 
 			this.logger.log(Level.FINER, "path = {0}", path);
 
-			objectPath = Binder.makeObjectPath(base, path);
+			objectPath = Binder.makeObjectPath(base, path, null);
 
 			this.logger.log(Level.FINER,
 					"object path = {0}", objectPath);
@@ -354,7 +342,7 @@ public class ComponentUtils {
 	protected void addComponentSizeListeners(Object component) {
 	    if (!Binder.addListener(component,
 				    BindingListenerCategory.COMPONENT,
-				    this)) {
+				    this, null)) {
 
 		this.logger.log(Level.FINER,
 				"Cannot add listener on component: {0}",
@@ -419,18 +407,17 @@ public class ComponentUtils {
 			this.componentRef.clear();
 		    } // end of if
 
-		    this.componentRef = new WeakReference(component);
+		    this.componentRef = new WeakReference<Object>(component);
 
-		    this.logger.log(Level.FINER,
-				    "Set new common size: {0}", this.commonSize);
+		    this.logger.log(Level.FINER, "Set new common size: {0}", 
+                                    this.commonSize);
 
 		} // end of if	    
 	    } // end of sync
 
 	    // Finalize
 	    if (!this.waitedComponents.isEmpty()) {
-		this.logger.log(Level.FINER,
-				"Wait more component: {0}", 
+		this.logger.log(Level.FINER, "Wait more component: {0}", 
 				this.waitedComponents.size());
 
 		return;
@@ -466,15 +453,15 @@ public class ComponentUtils {
 
 		this.logger.finer("Will bind in two dimension");
 
-		selfPath = Binder.makeObjectPath(this, "commonSize");
+		selfPath = Binder.makeObjectPath(this, "commonSize", null);
 	    } else if ((this.flags & HORIZONTAL) == HORIZONTAL) {
 		this.logger.finer("Will only bind width");
 
-		selfPath = Binder.makeObjectPath(this, "commonWidth");
+		selfPath = Binder.makeObjectPath(this, "commonWidth", null);
 	    } else {
 		this.logger.finer("Wil only bind height");
 
-		selfPath = Binder.makeObjectPath(this, "commonHeight");
+		selfPath = Binder.makeObjectPath(this, "commonHeight", null);
 	    } // end of else
 
 	    this.logger.log(Level.FINER, "self path = {0}", selfPath);
@@ -515,8 +502,7 @@ public class ComponentUtils {
 		cp = componentPath(path);
 
 		this.logger.log(Level.FINER, 
-				"base = {0}, component = {1}, component path = {2}", 
-				new Object[] { base, component, cp });
+				"base = {0}, component = {1}, component path = {2}", new Object[] { base, component, cp });
 
 		ps = sizeProperties(component);
 
@@ -537,11 +523,13 @@ public class ComponentUtils {
 				    "size property = {0}", property);
 
 		    if (i == 0) { 
-			sizeElmt = new ObjectPathElement(component, property);
+			sizeElmt = 
+                            new ObjectPathElement(component, property, null);
 
 			path.end.setNextElement(sizeElmt);
 		    } else {
-			path = Binder.makeObjectPath(base, cp + '.' + property);
+			path = Binder.
+                            makeObjectPath(base, cp + '.' + property, null);
 
 			sizeElmt = path.end;
 		    } // end of else
@@ -817,12 +805,12 @@ public class ComponentUtils {
 	/**
 	 * Proxyfied component
 	 */
-	private WeakReference compRef = null;
+	private final WeakReference<Component> compRef;
 
 	/**
 	 * Logger
 	 */
-	private Logger logger = null;
+	private final Logger logger;
 
 	// --- Constructors ---
 
@@ -831,15 +819,15 @@ public class ComponentUtils {
 	 *
 	 * @param component Target component
 	 */
-	public ComponentMediator(Component component) {
+	public ComponentMediator(final Component component) {
 	    if (component == null) {
 		throw new IllegalArgumentException("Invalid component: " + 
 						   component);
 
 	    } // end of if
 
-	    this.compRef = new WeakReference(component);
-	    this.logger = Logger.getLogger(/*LibraSwing*/"Melasse");
+	    this.compRef = new WeakReference<Component>(component);
+	    this.logger = Logger.getLogger("Melasse");
 
 	    this.logger.finer("Inited");
 	} // end of <init>

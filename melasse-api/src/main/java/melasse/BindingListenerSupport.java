@@ -21,6 +21,11 @@ abstract class BindingListenerSupport {
      */
     protected final Setter setter;
 
+    /**
+     * Binding options
+     */
+    protected final BindingOptionMap options;
+
     // --- Constructors ---
 
     /**
@@ -28,13 +33,16 @@ abstract class BindingListenerSupport {
      *
      * @param setter Setter to propagate change from source to target object
      */
-    protected BindingListenerSupport(final Setter setter) {
+    protected BindingListenerSupport(final Setter setter,
+                                     final BindingOptionMap options) {
+
 	if (setter == null) {
 	    throw new IllegalArgumentException("Invalid setter: " + setter);
 	} // end of if
 
 	this.setter = setter;
-	this.logger = Logger.getLogger("Melasse");
+        this.options = options;
+	this.logger = Binder.getLogger(this.options);
 
 	this.logger.log(Level.FINER, "setter = {0}", setter);
     } // end of <init>

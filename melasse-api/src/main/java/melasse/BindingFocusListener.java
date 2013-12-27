@@ -18,8 +18,7 @@ import javax.swing.text.JTextComponent;
  * @author Cedric Chantepie 
  */
 class BindingFocusListener 
-    extends BindingListenerSupport 
-    implements FocusListener {
+    extends BindingListenerSupport implements FocusListener {
 
     // --- Constructors ---
 
@@ -28,8 +27,10 @@ class BindingFocusListener
      *
      * @param setter Setter to propagate changes
      */
-    protected BindingFocusListener(Setter setter) {
-	super(setter);
+    protected BindingFocusListener(final Setter setter, 
+                                   final BindingOptionMap options) {
+
+	super(setter, options);
     } // end of <init>
 
     // ---
@@ -42,12 +43,12 @@ class BindingFocusListener
     /**
      * Sets property value on object when source lost focus.
      */
-    public void focusLost(FocusEvent evt) {
+    public void focusLost(final FocusEvent evt) {
 	this.logger.log(Level.FINER,
 			"evt = {0}", evt);
 
 	Object sourceValue = null;
-	Object source = evt.getSource();
+	final Object source = evt.getSource();
 
 	this.logger.log(Level.FINER, "source = {0}", source);
 
@@ -58,9 +59,8 @@ class BindingFocusListener
 	} else if (source instanceof JSpinner) {
 	    sourceValue = ((JSpinner) source).getValue();
 	} else {
-	    this.logger.log(Level.WARNING,
-			    "Unsupported component: {0}",
-			    source);
+	    this.logger.log(Level.WARNING, 
+                            "Unsupported component: {0}", source);
 
 	    return;
 	} // end of else

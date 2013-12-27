@@ -13,6 +13,6 @@ public interface ObjectPathListener {
      *
      * @param element Path element raising up completion event.
      */
-    public void pathCompleted(ObjectPathElement element);
+    public void pathCompleted(final ObjectPathElement element);
 
 } // end of interface ObjectPathListener

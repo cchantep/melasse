@@ -40,7 +40,7 @@ class BindingPostAddListenerHook
     /**
      * Logger
      */
-    private Logger logger = null;
+    private final Logger logger;
 
     // --- Constructors ---
 
@@ -55,8 +55,7 @@ class BindingPostAddListenerHook
 
 	this.path = path;
 	this.options = options;
-
-	this.logger = Logger.getLogger("Melasse");
+	this.logger = Binder.getLogger(options);
     } // end of <init>
 
     // ---
@@ -64,7 +63,7 @@ class BindingPostAddListenerHook
     /**
      * {@inheritDoc}
      */
-    public void afterAddListeners(final ObjectPathElement observedElmt, final Map<BindingListenerCategory,ArrayList> registry) {
+    public void afterAddListeners(final ObjectPathElement observedElmt, final Map<BindingListenerCategory,ArrayList<Object>> registry) {
 
 	this.logger.log(Level.FINER, "options = {0}, observed element = {1}, associated path = {2}", new Object[] { options, observedElmt, path });
 
@@ -90,7 +89,7 @@ class BindingPostAddListenerHook
             } else {
                 // TODO: Workaround - convert text event to property one
                 final BindingTextListener tl = 
-                    new BindingTextListener(textComp);
+                    new BindingTextListener(textComp, this.options);
 
                 textComp.addTextListener(tl);
 
@@ -113,7 +112,7 @@ class BindingPostAddListenerHook
             } else {
                 // Workaround - redirect text event to property change
                 final BindingDocumentListener dl = 
-                    new BindingDocumentListener(textComp);
+                    new BindingDocumentListener(textComp, this.options);
 
                 textComp.getDocument().addDocumentListener(dl);
 
@@ -173,8 +172,7 @@ class BindingPostAddListenerHook
      * @param pathElmt
      * @param registry Listeners registry
      */
-    private void addPropertyListeners(final ObjectPathElement pathElmt,
-				      final Map<BindingListenerCategory,ArrayList> registry) {
+    private void addPropertyListeners(final ObjectPathElement pathElmt, final Map<BindingListenerCategory,ArrayList<Object>> registry) {
 
 	this.logger.log(Level.FINER,
 			"observed element = {0}, registry = {1}, path = {2}",
@@ -185,19 +183,20 @@ class BindingPostAddListenerHook
 
 	final BindingPropertyChangeListener plistener = 
 	    new BindingPropertyChangeListener(setter,
-					      pathElmt.getProperty());
+					      pathElmt.getProperty(),
+                                              this.options);
 
 	if (options.containsKey(BindingKey.ALLOW_NULL_CHANGE)) {
 	    plistener.setAllowNullChange(true);
 	} // end of if
 
-	ArrayList list = registry.
-	    get(BindingListenerCategory.PROPERTY_CHANGE);
+	ArrayList<Object> list = registry.
+            get(BindingListenerCategory.PROPERTY_CHANGE);
 
 	if (list != null) {
 	    list.add(plistener);
 	} else {
-	    list = new ArrayList(1);
+	    list = new ArrayList<Object>(1);
 
 	    list.add(plistener);
 
@@ -211,31 +210,28 @@ class BindingPostAddListenerHook
      * @param pathElmt
      * @param registry Listeners registry
      */
-    private void addComboBoxListeners(final ObjectPathElement pathElmt,
-				      final Map<BindingListenerCategory,ArrayList> registry) {
+    private void addComboBoxListeners(final ObjectPathElement pathElmt, final Map<BindingListenerCategory,ArrayList<Object>> registry) {
 
 	this.logger.log(Level.FINER,
 			"path element = {0}, registry = {1}",
 			new Object[] { pathElmt, registry });
 
-	String property = pathElmt.getProperty();
+	final String property = pathElmt.getProperty();
 
-	this.logger.log(Level.FINER,
-			"property = {0}", property);
+	this.logger.log(Level.FINER, "property = {0}", property);
 
-	BindingListenerSupport.Setter setter = 
+	final BindingListenerSupport.Setter setter = 
 	    new BindingListenerSupport.Setter(this.path.start);
 
-	BindingComboBoxItemListener ilistener =
-	    new BindingComboBoxItemListener(setter, property);
+	final BindingComboBoxItemListener ilistener =
+	    new BindingComboBoxItemListener(setter, property, this.options);
 
-	ArrayList list = registry.
-	    get(BindingListenerCategory.ITEM);
+	ArrayList<Object> list = registry.get(BindingListenerCategory.ITEM);
 
 	if (list != null) {
 	    list.add(ilistener);
 	} else {
-	    list = new ArrayList(1);
+	    list = new ArrayList<Object>(1);
 
 	    list.add(ilistener);
 
@@ -250,25 +246,25 @@ class BindingPostAddListenerHook
      * @param registry Listeners registry
      */
     private void addSpinnerListeners(ObjectPathElement pathElmt,
-				     final Map<BindingListenerCategory,ArrayList> registry) {
+				     final Map<BindingListenerCategory,ArrayList<Object>> registry) {
 
 	this.logger.log(Level.FINER,
 			"path element = {0}, registry = {1}",
 			new Object[] { pathElmt, registry });
 
-	BindingListenerSupport.Setter setter = 
+	final BindingListenerSupport.Setter setter = 
 	    new BindingListenerSupport.Setter(this.path.start);
 
-	BindingSpinnerChangeListener clistener =
-	    new BindingSpinnerChangeListener(setter);
+	final BindingSpinnerChangeListener clistener =
+	    new BindingSpinnerChangeListener(setter, this.options);
 
-	ArrayList list = registry.
+	ArrayList<Object> list = registry.
 	    get(BindingListenerCategory.CHANGE);
 
 	if (list != null) {
 	    list.add(clistener);
 	} else {
-	    list = new ArrayList(1);
+	    list = new ArrayList<Object>(1);
 
 	    list.add(clistener);
 
@@ -282,26 +278,25 @@ class BindingPostAddListenerHook
      * @param pathElmt
      * @param registry Listeners registry
      */
-    private void addComponentSizeListeners(ObjectPathElement pathElmt,
-					   final Map<BindingListenerCategory,ArrayList> registry) {
+    private void addComponentSizeListeners(final ObjectPathElement pathElmt, final Map<BindingListenerCategory,ArrayList<Object>> registry) {
 
 	this.logger.log(Level.FINER,
 			"path element = {0}, registry = {1}",
 			new Object[] { pathElmt, registry });
 
-	BindingListenerSupport.Setter setter = 
+	final BindingListenerSupport.Setter setter = 
 	    new BindingListenerSupport.Setter(this.path.start);
 
-	BindingComponentSizeListener slistener =
-	    new BindingComponentSizeListener(setter);
+	final BindingComponentSizeListener slistener =
+	    new BindingComponentSizeListener(setter, this.options);
 
-	ArrayList list = registry.
+	ArrayList<Object> list = registry.
 	    get(BindingListenerCategory.COMPONENT);
 
 	if (list != null) {
 	    list.add(slistener);
 	} else {
-	    list = new ArrayList(1);
+	    list = new ArrayList<Object>(1);
 
 	    list.add(slistener);
 
@@ -315,8 +310,7 @@ class BindingPostAddListenerHook
      * @param pathElmt
      * @param registry Listeners registry
      */
-    private void addTextListeners(ObjectPathElement pathElmt,
-				  final Map<BindingListenerCategory,ArrayList> registry) {
+    private void addTextListeners(final ObjectPathElement pathElmt, final Map<BindingListenerCategory,ArrayList<Object>> registry) {
 
 	this.logger.log(Level.FINER,
 			"path element = {0}, registry = {1}",
@@ -330,13 +324,14 @@ class BindingPostAddListenerHook
 	    final BindingListenerSupport.Setter setter = 
 		new BindingListenerSupport.Setter(this.path.start);
 
-	    final BindingKeyListener klistener = new BindingKeyListener(setter);
-	    ArrayList list = registry.get(BindingListenerCategory.KEY);
+	    final BindingKeyListener klistener = 
+                new BindingKeyListener(setter, this.options);
+	    ArrayList<Object> list = registry.get(BindingListenerCategory.KEY);
 
 	    if (list != null) {
 		list.add(klistener);
 	    } else {
-		list = new ArrayList(1);
+		list = new ArrayList<Object>(1);
 
 		list.add(klistener);
 
@@ -355,17 +350,17 @@ class BindingPostAddListenerHook
 							 pathElmt.getValue());
 
 	final BindingTextActionListener alistener =
-	    new BindingTextActionListener(setter);
+	    new BindingTextActionListener(setter, this.options);
 
 	final BindingFocusListener flistener =
-	    new BindingFocusListener(setter);
+	    new BindingFocusListener(setter, this.options);
 
-	ArrayList list = registry.get(BindingListenerCategory.ACTION);
+	ArrayList<Object> list = registry.get(BindingListenerCategory.ACTION);
 
 	if (list != null) {
 	    list.add(alistener);
 	} else {
-	    list = new ArrayList(1);
+	    list = new ArrayList<Object>(1);
 
 	    list.add(alistener);
 
@@ -377,7 +372,7 @@ class BindingPostAddListenerHook
 	if (list != null) {
 	    list.add(flistener);
 	} else {
-	    list = new ArrayList(1);
+	    list = new ArrayList<Object>(1);
 
 	    list.add(flistener);
 
@@ -404,6 +399,11 @@ class BindingPostAddListenerHook
          */
         private String text;
 
+        /**
+         * Binding options
+         */
+        private BindingOptionMap options;
+
         // --- Constructor ---
 
         /**
@@ -411,9 +411,13 @@ class BindingPostAddListenerHook
          *
          * @param component Observed text component
          */
-        ConvertedTextEventListener(final C component, final String text) {
+        ConvertedTextEventListener(final C component, 
+                                   final String text,
+                                   final BindingOptionMap options) {
+
             this.component = component;
             this.text = text;
+            this.options = options;
         } // end of <init>
 
         // ---
@@ -454,8 +458,10 @@ class BindingPostAddListenerHook
          *
          * @param component Observed text component
          */
-        BindingTextListener(final TextComponent component) {
-            super(component, component.getText());
+        BindingTextListener(final TextComponent component, 
+                            final BindingOptionMap options) {
+
+            super(component, component.getText(), options);
         } // end of <init>
 
         // ---
@@ -482,8 +488,10 @@ class BindingPostAddListenerHook
          *
          * @param component Observed text component
          */
-        BindingDocumentListener(final JTextComponent component) {
-            super(component, component.getText());
+        BindingDocumentListener(final JTextComponent component, 
+                                final BindingOptionMap options) {
+
+            super(component, component.getText(), options);
         } // end of <init>
 
         // ---

@@ -43,7 +43,13 @@ public enum BindingKey {
     /**
      * Do not propage change from object A to object B
      */
-    TARGET_MODE("targetMode");
+    TARGET_MODE("targetMode"),
+
+    /**
+     * Debug category
+     * @see java.util.logging.Logger
+     */
+    DEBUG_CATEGORY("debugCategory");
 
     // --- Properties ---
 

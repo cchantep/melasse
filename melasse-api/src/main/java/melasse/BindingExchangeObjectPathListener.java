@@ -26,7 +26,7 @@ class BindingExchangeObjectPathListener implements ObjectPathListener {
     /**
      * Logger 
      */
-    private Logger logger = null;
+    private final Logger logger;
 
     // --- Constructors ---
 

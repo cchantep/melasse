@@ -24,8 +24,10 @@ class BindingTextActionListener
      *
      * @param setter Setter to propagate changes
      */
-    protected BindingTextActionListener(final Setter setter) {
-	super(setter);
+    protected BindingTextActionListener(final Setter setter,
+                                        final BindingOptionMap options) {
+
+	super(setter, options);
     } // end of <init>
 
     // ---

@@ -14,9 +14,9 @@ import java.util.logging.Level;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
 
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 
 /**
  * Maintains an element of path to an object property.
@@ -30,7 +30,7 @@ class ObjectPathElement implements PropertyChangeListener {
     /**
      * Weak reference to object
      */
-    private WeakReference objectRef = null;
+    private WeakReference<Object> objectRef = null;
 
     /**
      * Object property
@@ -48,9 +48,14 @@ class ObjectPathElement implements PropertyChangeListener {
     private ObjectPathElement next = null;
 
     /**
+     * Binding options
+     */
+    private final BindingOptionMap options;
+
+    /**
      * Logger
      */
-    private Logger logger = null;
+    private final Logger logger;
 
     /**
      * Listeners
@@ -65,7 +70,7 @@ class ObjectPathElement implements PropertyChangeListener {
     /**
      * Listeners maintained on target object
      */
-    private HashMap<BindingListenerCategory,ArrayList> addedListeners = null;
+    private HashMap<BindingListenerCategory,ArrayList<Object>> addedListeners = null;
 
     /**
      * Event dispatcher (to |listeners|)
@@ -75,17 +80,17 @@ class ObjectPathElement implements PropertyChangeListener {
     /**
      * Input value transformer
      */
-    private UnaryFunction inTransformer = null;
+    private UnaryFunction<Object,Object> inTransformer = null;
 
     /**
      * Input aggregate transformer.
      */
-    private UnaryFunction inAggregateTransformer = null;
+    private UnaryFunction<Boolean,Boolean> inAggregateTransformer = null;
 
     /**
      * Output value transformer
      */
-    private UnaryFunction outTransformer = null;
+    private UnaryFunction<Object,Object> outTransformer = null;
 
     /**
      * Mediator factory
@@ -107,7 +112,8 @@ class ObjectPathElement implements PropertyChangeListener {
      * @param property Object property
      */
     public ObjectPathElement(final Object object,
-			     final String property) {
+			     final String property,
+                             final BindingOptionMap options) {
 
 	if (property == null || property.length() == 0) {
 	    throw new IllegalArgumentException("Invalid property: " + 
@@ -120,9 +126,11 @@ class ObjectPathElement implements PropertyChangeListener {
 	} // end of if
 
 	this.property = normalizeProperty(property);
-	this.logger = Logger.getLogger("Melasse");
+	this.logger = Binder.getLogger(options);
+        this.options = options;
 	this.listeners = new CopyOnWriteArrayList<ObjectPathListener>();
-	this.addedListeners = new HashMap<BindingListenerCategory,ArrayList>();
+	this.addedListeners = 
+            new HashMap<BindingListenerCategory,ArrayList<Object>>();
 	this.hooks = new ArrayList<PostAddListenerHook>();
 
 	setTargetObject(object);
@@ -145,9 +153,7 @@ class ObjectPathElement implements PropertyChangeListener {
 
 	// ---
 
-        return !name.endsWith("[]") ? name 
-                : name.substring(0, name.length()-2);
-
+        return !name.endsWith("[]") ? name : name.substring(0, name.length()-2);
     } // end of normalizeProperty
 
     /**
@@ -157,7 +163,7 @@ class ObjectPathElement implements PropertyChangeListener {
      * @param transformer Input transformer
      * @see #setAndTransform
      */
-    public void setInputTransformer(final UnaryFunction transformer) {
+    public void setInputTransformer(final UnaryFunction<Object,Object> transformer) {
 	this.inTransformer = transformer;
     } // end of setInputTransformer
 
@@ -168,7 +174,7 @@ class ObjectPathElement implements PropertyChangeListener {
      * @param transformer output transformer
      * @see #getTransformedValue
      */
-    public void setOutputTransformer(final UnaryFunction transformer) {
+    public void setOutputTransformer(final UnaryFunction<Object,Object> transformer) {
 	this.outTransformer = transformer;
     } // end of setOutputTransformer
 
@@ -177,7 +183,7 @@ class ObjectPathElement implements PropertyChangeListener {
      *
      * @param factory Mediator factory
      */
-    public void setMediatorFactory(MediatorFactory factory) {
+    public void setMediatorFactory(final MediatorFactory factory) {
 	this.mediatorFactory = factory;
 
 	if (this.next != null) {
@@ -216,7 +222,7 @@ class ObjectPathElement implements PropertyChangeListener {
 
 	releaseObjectRef();
 
-	this.objectRef = new WeakReference(obj);
+	this.objectRef = new WeakReference<Object>(obj);
     } // end of setMediatorFactory
 
     /**
@@ -298,11 +304,10 @@ class ObjectPathElement implements PropertyChangeListener {
 
 	    } // end of if
 
-	    if (obj != null) {
-		this.objectRef = new WeakReference(obj);
-	    } else {
-		this.objectRef = new WeakReference(target);
-	    } // end of else
+            this.objectRef = (obj != null) 
+                ? new WeakReference<Object>(obj) 
+                : new WeakReference<Object>(target);
+
 	} // end of else
 
 	if (!isTargetReachable()) {
@@ -312,8 +317,7 @@ class ObjectPathElement implements PropertyChangeListener {
 	// ---
 
 	if (this.manyToOne) {
-	    Object value = Binder.
-		getValue(target, this.property);
+	    final Object value = Binder.getValue(target, this.property);
 	    
 	    this.logger.log(Level.FINER, "value = {0}", value);
 	
@@ -347,7 +351,7 @@ class ObjectPathElement implements PropertyChangeListener {
 
 	Binder.removeListener(target,
 			      BindingListenerCategory.PROPERTY_CHANGE,
-			      this);
+			      this, this.options);
 
 	// CHANGE LISTENER ???
 
@@ -360,7 +364,7 @@ class ObjectPathElement implements PropertyChangeListener {
 
 		synchronized(list) {
 		    for (final Object l : list) {
-			Binder.removeListener(target, cat, l);
+			Binder.removeListener(target, cat, l, this.options);
 		    } // end of for
 		} // end of sync
 	    } // end of for
@@ -371,7 +375,8 @@ class ObjectPathElement implements PropertyChangeListener {
      * Puts listeners from |registry| in added list 
      * and them to target object also.
      */
-    private void pushListenerRegistry(Map<BindingListenerCategory,ArrayList> registry) {
+    private void pushListenerRegistry(Map<BindingListenerCategory,ArrayList<Object>> registry) {
+
 	if (!isTargetReachable()) {
 	    this.logger.warning("Cannot add listeners on garbage object");
 
@@ -387,17 +392,17 @@ class ObjectPathElement implements PropertyChangeListener {
 
 	synchronized(this.addedListeners) {
 	    // should have been cleared before
-	    ArrayList rl;
-	    ArrayList list;
-	    for (BindingListenerCategory cat : registry.keySet()) {
+	    ArrayList<Object> rl;
+	    ArrayList<Object> list;
+	    for (final BindingListenerCategory cat : registry.keySet()) {
 		rl = registry.get(cat);
 
 		this.logger.log(Level.FINER,
 				"category = {0} -> {1}",
 				new Object[] { cat, rl });
 
-		for (Object l : rl) {
-		    Binder.addListener(target, cat, l);
+		for (final Object l : rl) {
+		    Binder.addListener(target, cat, l, this.options);
 		} // end of for
 
 		list = this.addedListeners.get(cat);
@@ -436,7 +441,7 @@ class ObjectPathElement implements PropertyChangeListener {
 
 	Binder.addListener(target,
 			   BindingListenerCategory.PROPERTY_CHANGE,
-			   this);
+			   this, this.options);
 	
 	// CHANGE LISTENER ???
 
@@ -444,11 +449,11 @@ class ObjectPathElement implements PropertyChangeListener {
 	    return;
 	} // end of if
 
-	HashMap<BindingListenerCategory,ArrayList> registry = 
-	    new HashMap<BindingListenerCategory,ArrayList>();
+	final HashMap<BindingListenerCategory,ArrayList<Object>> registry = 
+	    new HashMap<BindingListenerCategory,ArrayList<Object>>();
 	
 	synchronized(this.hooks) {
-	    for (PostAddListenerHook h : this.hooks) {
+	    for (final PostAddListenerHook h : this.hooks) {
 		h.afterAddListeners(this, registry);
 	    } // end of for
 	} // end of if
@@ -471,8 +476,8 @@ class ObjectPathElement implements PropertyChangeListener {
 	} // end of if
 
 	// ... else applies it directly
-	final HashMap<BindingListenerCategory,ArrayList> hreg = 
-	    new HashMap<BindingListenerCategory,ArrayList>();
+	final HashMap<BindingListenerCategory,ArrayList<Object>> hreg = 
+	    new HashMap<BindingListenerCategory,ArrayList<Object>>();
 	
 	hook.afterAddListeners(this, hreg);
 
@@ -577,8 +582,6 @@ class ObjectPathElement implements PropertyChangeListener {
 	this.logger.log(Level.FINER, "this = {0}, value = {1}", 
 			new Object[] { this, value });
 
-	Object target = null;
-
 	if (!isTargetReachable()) {
 	    this.logger.log(Level.WARNING,
 			    "Cannot set value on null target object: {0} -> {1}",
@@ -633,13 +636,17 @@ class ObjectPathElement implements PropertyChangeListener {
 	if (this.inAggregateTransformer != null) {
 	    this.logger.finer("Set value with aggregate transformer");
 
-	    final Object val = inAggregateTransformer.apply(value);
+	    final Boolean val = inAggregateTransformer.apply((Boolean) value);
 
 	    this.logger.log(Level.FINER, "aggregated value = {0}", val);
 
-            Binder.setValue(this.objectRef.get(), this.property, val);
+            Binder.setValue(this.objectRef.get(), 
+                            this.property, val, this.options);
+
 	} else {
-            Binder.setValue(this.objectRef.get(), this.property, value);
+            Binder.setValue(this.objectRef.get(), 
+                            this.property, value, this.options);
+
         } // end of else
 
 	return true;
@@ -740,16 +747,14 @@ class ObjectPathElement implements PropertyChangeListener {
      *
      * @param value Current property value
      */
-    private void resetAggregator(Object value) {
+    private void resetAggregator(final Object value) {
 	if ((value instanceof Boolean) ||
-	    (value != null && Boolean.TYPE.
-	     equals(value.getClass()))) {
+	    (value != null && Boolean.TYPE.equals(value.getClass()))) {
 
-	    this.logger.log(Level.FINER,
-			    "Add group transformer for boolean");
+	    this.logger.log(Level.FINER, "Add group transformer for boolean");
 	    
 	    this.inAggregateTransformer = Binder.
-		getBooleanAndAggregateTransformer(this);
+		getBooleanAndAggregateTransformer(this, this.options);
 	    
 	} // end of if
     } // end of resetAggregator
@@ -773,7 +778,7 @@ class ObjectPathElement implements PropertyChangeListener {
 	    return false;
 	} // end of if
 
-	ObjectPathElement other = (ObjectPathElement) o;
+	final ObjectPathElement other = (ObjectPathElement) o;
 
 	return new EqualsBuilder().
 	    append(this.getTargetObject(), other.getTargetObject()).
@@ -849,8 +854,7 @@ class ObjectPathElement implements PropertyChangeListener {
 	 * @param observedElmt Object path element at which listeners are added
 	 * @param registry Listener registry (inout)
 	 */
-	public void afterAddListeners(ObjectPathElement observedElmt,
-				      final Map<BindingListenerCategory,ArrayList> registry);
+	public void afterAddListeners(ObjectPathElement observedElmt, Map<BindingListenerCategory,ArrayList<Object>> registry);
 
     } // end of class PostAddListenerHook
 } // end of class ObjectPathElement

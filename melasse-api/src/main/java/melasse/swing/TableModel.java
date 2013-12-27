@@ -19,7 +19,7 @@ public class TableModel extends DefaultTableModel {
     /**
      * Property change support
      */
-    private PropertyChangeSupport pcs = null;
+    private final PropertyChangeSupport<TableModel> pcs;
 
     // --- Constructors ---
 
@@ -29,62 +29,52 @@ public class TableModel extends DefaultTableModel {
     public TableModel() {
 	super();
 
-	this.pcs = new PropertyChangeSupport(this);
+	this.pcs = new PropertyChangeSupport<TableModel>(this);
     } // end of <init>
 
     /**
      * {@inheritDocs}
      */
-    public TableModel(int rowCount,
-		      int columnCount) {
-
+    public TableModel(final int rowCount, final int columnCount) {
 	super(rowCount, columnCount);
 
-	this.pcs = new PropertyChangeSupport(this);
+	this.pcs = new PropertyChangeSupport<TableModel>(this);
     } // end of <init>
 
     /**
      * {@inheritDocs}
      */
-    public TableModel(Vector columnNames,
-		      int rowCount) {
-
+    public TableModel(final Vector columnNames, final int rowCount) {
 	super(columnNames, rowCount);
 
-	this.pcs = new PropertyChangeSupport(this);
+	this.pcs = new PropertyChangeSupport<TableModel>(this);
     } // end of <init>
 
     /**
      * {@inheritDocs}
      */
-    public TableModel(Object[] columnNames,
-		      int rowCount) {
-
+    public TableModel(final Object[] columnNames, final int rowCount) {
 	super(columnNames, rowCount);
 
-	this.pcs = new PropertyChangeSupport(this);
+	this.pcs = new PropertyChangeSupport<TableModel>(this);
     } // end of <init>
 
     /**
      * {@inheritDocs}
      */
-    public TableModel(Vector data,
-		      Vector columnNames) {
-
+    public TableModel(final Vector data, final Vector columnNames) {
 	super(data, columnNames);
 
-	this.pcs = new PropertyChangeSupport(this);
+	this.pcs = new PropertyChangeSupport<TableModel>(this);
     } // end of <init>
 
     /**
      * {@inheritDocs}
      */
-    public TableModel(Object[][] data,
-		      Object[] columnNames) {
-
+    public TableModel(final Object[][] data, final Object[] columnNames) {
 	super(data, columnNames);
 
-	this.pcs = new PropertyChangeSupport(this);
+	this.pcs = new PropertyChangeSupport<TableModel>(this);
     } // end of <init>
 
     // --- Property change support ---

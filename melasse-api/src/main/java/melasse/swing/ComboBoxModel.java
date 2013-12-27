@@ -12,13 +12,13 @@ import javax.swing.DefaultComboBoxModel;
  *
  * @author Cedric Chantepie 
  */
-public class ComboBoxModel extends DefaultComboBoxModel {
+public class ComboBoxModel<E> extends DefaultComboBoxModel<E> {
     // --- Properties ---
 
     /**
      * Property change support
      */
-    private PropertyChangeSupport pcs = null;
+    private final PropertyChangeSupport pcs;
 
     // --- Constructors ---
 
@@ -36,7 +36,7 @@ public class ComboBoxModel extends DefaultComboBoxModel {
      *
      * @param array Model object array
      */
-    public ComboBoxModel(Object[] array) {
+    public ComboBoxModel(final E[] array) {
 	super(array);
 
 	this.pcs = new PropertyChangeSupport(this);
@@ -47,7 +47,7 @@ public class ComboBoxModel extends DefaultComboBoxModel {
      *
      * @param vector Model vector
      */
-    public ComboBoxModel(Vector<?> vector) {
+    public ComboBoxModel(Vector<E> vector) {
 	super(vector);
 
 	this.pcs = new PropertyChangeSupport(this);

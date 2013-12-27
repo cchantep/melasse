@@ -15,9 +15,9 @@ import java.text.MessageFormat;
 
 import java.awt.event.KeyEvent;
 
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 
 /**
  * Application overall utility class (signal/introspection, i18n ...).
@@ -138,7 +138,7 @@ public class AppUtils {
 		   "target class = {0}", targetClass);
 
 	synchronized(methods) {
-	    String key = methodName + '/' + arguments.length;
+	    final String key = methodName + '/' + arguments.length;
 
 	    logger.log(Level.FINER, "key = {0}", key);
 
@@ -149,7 +149,7 @@ public class AppUtils {
 	    } else {
 		Method[] array = targetClass.getMethods();
 
-		Class[] ptypes;
+		Class<?>[] ptypes;
 		boolean m = false;
 		for (int i = 0; i < array.length && method == null; i++) {
 		    logger.log(Level.FINER,
@@ -223,9 +223,7 @@ public class AppUtils {
      * @param target Target instance (of application)
      * @param name Property name
      */
-    public static Object getProperty(Object target,
-				     String name) {
-
+    public static Object getProperty(final Object target, final String name) {
 	if (target == null) {
 	    throw new IllegalArgumentException("Invalid target: " + target);
 	} // end of if
@@ -238,10 +236,8 @@ public class AppUtils {
 
 	// --- 
 
-	Class targetClass = target.getClass();
-	PropertyKey key = 
-	    new PropertyKey(targetClass,
-			    name);
+	final Class<?> targetClass = target.getClass();
+	final PropertyKey key = new PropertyKey(targetClass, name);
 
 	Method getter = null;
 
@@ -250,13 +246,12 @@ public class AppUtils {
 		getter = properties.get(key);
 	    } else {
 		try {
-		    String getterName = "get" + 
+		    final String getterName = "get" + 
 			Character.toUpperCase(name.charAt(0)) +
 			name.substring(1);
 
 		    getter = targetClass.
-			getMethod(getterName,
-				  new Class[0]);
+			getMethod(getterName, new Class<?>[0]);
 
 		    properties.put(key, getter);
 		} catch (Exception e) {
@@ -267,13 +262,12 @@ public class AppUtils {
 
 		if (getter == null) {
 		    try {
-			String getterName = "is" + 
+			final String getterName = "is" + 
 			    Character.toUpperCase(name.charAt(0)) +
 			    name.substring(1);
 
 			getter = targetClass.
-			    getMethod(getterName,
-				      new Class[0]);
+                            getMethod(getterName, new Class<?>[0]);
 
 			properties.put(key, getter);
 		    } catch (Exception e) {

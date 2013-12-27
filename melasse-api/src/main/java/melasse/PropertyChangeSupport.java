@@ -52,7 +52,7 @@ public class PropertyChangeSupport<T> extends java.beans.PropertyChangeSupport {
 	this.sourceBean = sourceBean;
 	this.dependencies = new HashMap<String,HashSet<String>>();
 	this.values = new HashMap<String,Object>();
-	this.logger = Binder.getLogger();
+	this.logger = Logger.getLogger("Melasse");
 
 	this.logger.log(Level.FINER, "Inited: {0}", this.sourceBean);
     } // end of PropertyChangeSupport

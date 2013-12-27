@@ -35,9 +35,10 @@ class BindingPropertyChangeListener
      * @param watchedProperty Name of property watched by this listener
      */
     protected BindingPropertyChangeListener(final Setter setter, 
-					    final String watchedProperty) {
+					    final String watchedProperty,
+                                            final BindingOptionMap options) {
 
-	super(setter);
+	super(setter, options);
 
 	if (watchedProperty == null) {
 	    throw new IllegalArgumentException("Invalid name of watched " +
@@ -73,7 +74,6 @@ class BindingPropertyChangeListener
 			new Object[] { evt, name, this.property });
 
 	if (!this.property.equals(name)) {
-            
 	    this.logger.finer("Skip unwatched property");
 
 	    return;

@@ -14,15 +14,14 @@ import javax.swing.JComboBox;
  * @author Cedric Chantepie 
  */
 class BindingComboBoxItemListener 
-    extends BindingListenerSupport 
-    implements ItemListener {
+    extends BindingListenerSupport implements ItemListener {
 
     // --- Properties ---
 
     /**
      * Property name
      */
-    private String property = null;
+    private final String property;
 
     // --- Constructors ---
 
@@ -32,10 +31,11 @@ class BindingComboBoxItemListener
      * @param setter Setter used to propagate value
      * @param property Either "selectedItem" or "selectedObjects"
      */
-    protected BindingComboBoxItemListener(Setter setter,
-					  String property) {
+    protected BindingComboBoxItemListener(final Setter setter,
+					  final String property,
+                                          final BindingOptionMap options) {
 
-	super(setter);
+	super(setter, options);
 
 	if (!"selectedItem".equals(property) && 
 	    !"selectedObjects".equals(property)) {
@@ -54,28 +54,24 @@ class BindingComboBoxItemListener
      * Changes object property, using transformer if given, 
      * from spinner value change.
      */
-    public void itemStateChanged(ItemEvent evt) {
-	this.logger.log(Level.FINER,
-			"evt = {0}", evt);
+    public void itemStateChanged(final ItemEvent evt) {
+	final Object source = evt.getSource();
 
-	Object sourceValue = null;
-	Object source = evt.getSource();
-
-	this.logger.log(Level.FINER, 
-			"source = {0}", source);
+	this.logger.log(Level.FINER, "event = {0}, source = {1}", 
+                        new Object[] { evt, source });
 
 	if (!(source instanceof JComboBox)) {
 	    this.logger.log(Level.WARNING,
-			    "Unsupported spinner component: {0}",
-			    source);
+			    "Unsupported spinner component: {0}", source);
 
 	    return;
 	} // end of else
 
-	sourceValue = Binder.getValue(source, this.property);
+        // ---
 
-	this.logger.log(Level.FINER, 
-			"sourceValue = {0}", sourceValue);
+	final Object sourceValue = Binder.getValue(source, this.property);
+
+	this.logger.log(Level.FINER, "sourceValue = {0}", sourceValue);
 
 	setValue(sourceValue);
     } // end of stateChanged

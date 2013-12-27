@@ -16,7 +16,7 @@ public class ListSelectionModel extends DefaultListSelectionModel {
 
     /**
      */
-    private PropertyChangeSupport pcs = null;
+    private final PropertyChangeSupport<Object> pcs;
 
     /**
      * Max selection index
@@ -41,7 +41,7 @@ public class ListSelectionModel extends DefaultListSelectionModel {
     public ListSelectionModel() {
 	super();
 
-	this.pcs = new PropertyChangeSupport(this);
+	this.pcs = new PropertyChangeSupport<Object>(this);
 	this.maxSelectionIndex = super.getMaxSelectionIndex();
 	this.minSelectionIndex = super.getMinSelectionIndex();
 	this.selectionEmpty = super.isSelectionEmpty();
