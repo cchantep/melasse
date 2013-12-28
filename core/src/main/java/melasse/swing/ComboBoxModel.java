@@ -12,7 +12,7 @@ import javax.swing.DefaultComboBoxModel;
  *
  * @author Cedric Chantepie 
  */
-public class ComboBoxModel<E> extends DefaultComboBoxModel<E> {
+public class ComboBoxModel<E> extends DefaultComboBoxModel {
     // --- Properties ---
 
     /**

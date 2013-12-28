@@ -163,8 +163,7 @@ public final class SourcesPanel extends JPanel {
         this.titleList = (List<String>) Arrays.asList(titles);
         this.filesModel = new ComboBoxModel<String>(titles);
 
-        final JComboBox<String> filesBox = 
-            new JComboBox<String>(this.filesModel);
+        final JComboBox filesBox = new JComboBox(this.filesModel);
         
         // text pane
         this.textPane = new JTextPane();

@@ -1,10 +1,23 @@
-# Melasse API
+# Melasse
 
-Melasse *glue* API.
+Melasse *glue* framework.
+
+[![Build Status](https://secure.travis-ci.org/cchantep/melasse.png?branch=master)](http://travis-ci.org/cchantep/melasse)
+
+## Examples
+
+Example application shows how Melasse can be used to declare [UI data bindings](http://en.wikipedia.org/wiki/UI_data_binding).
+
+1. Download [application](https://github.com/cchantep/melasse/releases/download/v1.0/melasse-examples-1.0.jar),
+2. double-click to launch examples.
 
 ## Overall
 
 Main usage class is `melasse.Binder`, which prepares UI bindings.
+
+```java
+Binder.bind(/* source, target, options */);
+```
 
 ## Object path
 
@@ -127,3 +140,58 @@ This is also useful to easily generate change event based on several properties.
 Way bindings are set up can be configured providing options, as firth argument of the `bind` method.
 
 - targetModeOptions: When using a read-only property as binding source. Avoid warning such as `Target object does not support setting value for property X: myInstance@123456`.
+
+## Usage
+
+Melasse can be used in Maven or SBT project using Applicius repository.
+
+For Maven project:
+
+```xml
+<project>
+  <!-- ... -->
+  <repositories>
+    <!-- ... -->
+
+    <repository>
+      <id>applicius-releases</id>
+      <name>Applicius Maven2 Releases Repository</name>
+      <url>https://raw.github.com/applicius/mvn-repo/master/releases/</url>
+    </repository>
+  </repositories>
+
+  <dependencies>
+    <dependency>
+      <groupId>melasse</groupId>
+      <artifactId>melasse-core</artifactId>
+      <version>VERSION</version>
+    </dependency>
+  </dependencies>
+
+  <!-- ... -->
+</project>
+```
+
+For SBT project:
+
+```scala
+resolvers += "Applicius Releases" at "https://raw.github.com/applicius/mvn-repo/master/releases/"
+
+libraryDependencies += "melasse" %% "melasse-core" % "VERSION"
+```
+
+## Build
+
+Melasse is built using Maven 3: 
+
+```
+# git clone https://github.com/cchantep/melasse.git
+# cd melasse
+# mvn install
+```
+
+Pre-requisites:
+
+- GIT client
+- Maven 3+
+- JDK 1.6+

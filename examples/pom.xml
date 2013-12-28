@@ -1,69 +1,55 @@
-<?xml version="1.0"?><project>
+<?xml version="1.0"?>
+<project>
+  <parent>
+    <groupId>melasse</groupId>
+    <artifactId>melasse</artifactId>
+    <version>1.0</version>
+  </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>melasse</groupId>
-  <artifactId>melasse-examples</artifactId>
-  <name>melasse-examples</name>
-  <version>1.0-SNAPSHOT</version>
+  <artifactId>examples</artifactId>
+  <name>Melasse examples</name>
+  <version>1.0</version>
+  <description>Melasse examples</description>
   <url>http://github.com/cchantep/melasse</url>
+
   <dependencies>
     <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+    </dependency>
+    <dependency>
       <groupId>melasse</groupId>
-      <artifactId>melasse-api</artifactId>
-      <version>1.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.swinglabs</groupId>
-      <artifactId>swing-layout</artifactId>
-      <version>1.0.3</version>
-      <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>org.swinglabs</groupId>
-      <artifactId>swingx</artifactId>
-      <version>0.9.1</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
-      <version>2.3</version>
-      <type>jar</type>
+      <artifactId>melasse-core</artifactId>
     </dependency>
   </dependencies>
+
   <build>
     <resources>
       <resource>
         <directory>src/main/resources</directory>
-	<excludes>
-	  <exclude>**/melasse-examples*.properties</exclude>
-	</excludes>
+        <excludes>
+          <exclude>**/melasse-examples*.properties</exclude>
+        </excludes>
       </resource>
       <resource>
         <directory>src/main/resources</directory>
-	<includes>
-	  <include>**/melasse-examples*.properties</include>
-	</includes>
-	<filtering>true</filtering>
+        <includes>
+          <include>**/melasse-examples*.properties</include>
+        </includes>
+        <filtering>true</filtering>
+      </resource>
+      <resource>
+        <directory>${project.build.directory}${file.separator}generated-resources</directory>
+        <filtering>false</filtering>
       </resource>
     </resources>
+
     <plugins>
-      <plugin>
-	<groupId>org.apache.maven.plugins</groupId>
-	<artifactId>maven-compiler-plugin</artifactId>
-	<configuration>
-	<source>1.5</source>
-	<target>1.5</target>
-	</configuration>
-      </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>buildnumber-maven-plugin</artifactId>
-        <version>1.0-beta-3-SNAPSHOT</version>
+        <version>1.2</version>
         <executions>
           <execution>
             <phase>validate</phase>
@@ -72,8 +58,9 @@
             </goals>
           </execution>
         </executions>
-	<configuration>
-          <format>MelasseExamples-{0,date,yyyyMMddHHmmssSS}</format>
+        <configuration>
+          <revisionOnScmFailure></revisionOnScmFailure>
+          <format>{0,date,yyyyMMddHHmmss}</format>
           <items>
             <item>timestamp</item>
           </items>
@@ -82,6 +69,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
+        <version>2.4</version>
         <configuration>
           <archive>
             <manifest>
@@ -95,24 +83,7 @@
           </archive>
         </configuration>
       </plugin>
-      <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>make-app</id>
-            <phase>package</phase>
-            <goals>
-              <goal>attached</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>target</outputDirectory>
-              <descriptors>
-                <descriptor>src/main/assembly/app.xml</descriptor>
-              </descriptors>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
+
       <plugin>
         <artifactId>maven-antrun-plugin</artifactId>
 
@@ -121,38 +92,60 @@
             <phase>generate-resources</phase>
             <configuration>
               <tasks>
-		<property name="compile_classpath"
-			  refid="maven.compile.classpath"/>
+                <property name="compile_classpath"
+                          refid="maven.compile.classpath"/>
                 <property name="runtime_classpath"
-			  refid="maven.runtime.classpath"/>
+                          refid="maven.runtime.classpath"/>
                 <property name="plugin_classpath"
-			  refid="maven.plugin.classpath"/>
-		
-		<path id="classpath"> 
-		  <pathelement path="${classes.dir}"/> 
-		  <pathelement path="${compile_classpath}"/> 
-		  <pathelement path="${plugin_classpath}"/> 
-                  <pathelement path="${basedir}${file.separator}src${file.separator}ant${file.separator}config${file.separator}java2html.jar" />
-		</path> 
+                          refid="maven.plugin.classpath"/>
+                
+                <path id="classpath"> 
+                  <pathelement path="${classes.dir}"/> 
+                  <pathelement path="${compile_classpath}"/> 
+                  <pathelement path="${plugin_classpath}"/> 
+                </path> 
 
-		<taskdef name="java2html"
-			 classname="de.java2html.anttasks.Java2HtmlTask"
+                <taskdef name="java2html"
+                         classname="de.java2html.anttasks.Java2HtmlTask"
                          classpathref="classpath" />
 
-		<java2html srcdir="${basedir}${file.separator}src${file.separator}main${file.separator}java"
-		  destdir="${basedir}${file.separator}src${file.separator}main${file.separator}resources"
-		  includes="**/*.java"
-		  style="eclipse"
-		  showLineNumbers="false"
-		  showFileName="false"
-		  useShortFileName="true"
-		  showTableBorder="true" />
-		  
+                <java2html srcdir="${basedir}${file.separator}src${file.separator}main${file.separator}java" destdir="${project.build.directory}${file.separator}generated-resources"
+                           includes="**/*.java"
+                           style="eclipse"
+                           showLineNumbers="false"
+                           showFileName="false"
+                           useShortFileName="true" 
+                           showTableBorder="false" />
+                
               </tasks>
             </configuration>
             <goals>
               <goal>run</goal>
             </goals>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>de.java2html</groupId>
+            <artifactId>java2html</artifactId>
+            <version>5.0</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.2</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <outputFile>${project.build.directory}/dist/${project.groupId}-${project.artifactId}-${project.version}.jar</outputFile>
+            </configuration>
           </execution>
         </executions>
       </plugin>

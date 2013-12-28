@@ -1,13 +1,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <groupId>melasse</groupId>
+    <artifactId>melasse</artifactId>
+    <version>1.0</version>
+  </parent>
+
   <modelVersion>4.0.0</modelVersion>
   <groupId>melasse</groupId>
-  <artifactId>melasse-api</artifactId>
+  <artifactId>melasse-core</artifactId>
   <packaging>jar</packaging>
   <version>1.0</version>
-  <name>melasse</name>
-  <description>Bean2bean or bean2ui bindings framework</description>
-  <url>http://maven.apache.org</url>
+  <name>Melasse core</name>
+  <description>Melasse framework</description>
+  <url>https://github.com/cchantep/melasse</url>
+
   <developers>
     <developer>
       <id>cchantep</id>
@@ -18,24 +25,6 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>3.1</version>
     </dependency>
   </dependencies>
-  <build>
-    <plugins>
-      <plugin>
-	<groupId>org.apache.maven.plugins</groupId>
-	<artifactId>maven-compiler-plugin</artifactId>
-        <version>3.0</version>
-        <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
-          <compilerArguments>
-            <Xlint:deprecation />
-            <Xlint:unchecked />
-          </compilerArguments>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
 </project>
