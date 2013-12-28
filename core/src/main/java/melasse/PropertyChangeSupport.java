@@ -26,7 +26,7 @@ public class PropertyChangeSupport<T> extends java.beans.PropertyChangeSupport {
     /**
      * Dependent key registry : master property <-> dependent properties
      */
-    private HashMap<String,HashSet<String>> dependencies = null;
+    private final HashMap<String,HashSet<String>> dependencies;
 
     /**
      * Property value before change
@@ -37,7 +37,7 @@ public class PropertyChangeSupport<T> extends java.beans.PropertyChangeSupport {
     /**
      * Logger
      */
-    private Logger logger = null;
+    private final Logger logger;
 
     // --- Constructors ---
 
@@ -139,10 +139,9 @@ public class PropertyChangeSupport<T> extends java.beans.PropertyChangeSupport {
     public PropertyEditSession propertyWillChange(final String propertyName) {
 	this.logger.log(Level.FINER, "Property will change: {0}", propertyName);
 
-	Object value = Binder.getValue(this.sourceBean, propertyName);
-	
-	PropertyEditSession session = 
-	    new PropertyEditSession(propertyName, value);
+	final Object value = Binder.getValue(this.sourceBean, propertyName);
+	final PropertyEditSession session = 
+            new PropertyEditSession(propertyName, value);
 
 	synchronized(this.values) {
 	    this.logger.log(Level.FINER,
@@ -161,8 +160,7 @@ public class PropertyChangeSupport<T> extends java.beans.PropertyChangeSupport {
 		
 	    // ---
 		
-	    properties = this.dependencies.
-		get(propertyName);
+	    properties = this.dependencies.get(propertyName);
 
 	    if (properties == null) {
 		return session;
@@ -173,12 +171,9 @@ public class PropertyChangeSupport<T> extends java.beans.PropertyChangeSupport {
 
 	// ---
 
-	HashMap<String,Object> pvals = new HashMap<String,Object>();
-
-	for (String dependent : properties) {
+	for (final String dependent : properties) {
 	    this.logger.log(Level.FINER,
-			    "Dependent property will change: {0}",
-			    dependent);
+			    "Dependent property will change: {0}", dependent);
 
 	    session.chain(propertyWillChange(dependent));
 	} // end of for
@@ -213,9 +208,9 @@ public class PropertyChangeSupport<T> extends java.beans.PropertyChangeSupport {
     /**
      * {@inheritDoc}
      */
-    public void firePropertyChange(String propertyName,
-				   boolean oldValue,
-				   boolean newValue) {
+    public void firePropertyChange(final String propertyName,
+				   final boolean oldValue,
+				   final boolean newValue) {
 
 	if (oldValue == newValue) {
 	    return;
@@ -226,18 +221,16 @@ public class PropertyChangeSupport<T> extends java.beans.PropertyChangeSupport {
 	notifyDependentProperties(propertyName);
 
 	synchronized(this.values) {
-	    Boolean newVal = newValue;
-
-	    this.values.put(propertyName, newVal);
+	    this.values.put(propertyName, (Boolean)newValue);
 	} // end of sync
     } // end of firePropertyChange
 
     /**
      * {@inheritDoc}
      */
-    public void firePropertyChange(String propertyName,
-				   int oldValue,
-				   int newValue) {
+    public void firePropertyChange(final String propertyName,
+				   final int oldValue,
+				   final int newValue) {
 
 	if (oldValue == newValue) {
 	    return;
@@ -248,18 +241,16 @@ public class PropertyChangeSupport<T> extends java.beans.PropertyChangeSupport {
 	notifyDependentProperties(propertyName);
 
 	synchronized(this.values) {
-	    Integer newVal = newValue;
-
-	    this.values.put(propertyName, newVal);
+	    this.values.put(propertyName, (Integer)newValue);
 	} // end of sync
     } // end of firePropertyChange
 
     /**
      * {@inheritDoc}
      */
-    public void firePropertyChange(String propertyName,
-				   Object oldValue,
-				   Object newValue) {
+    public void firePropertyChange(final String propertyName,
+				   final Object oldValue,
+				   final Object newValue) {
 
 	if (oldValue != null && oldValue.equals(newValue)) {
 	    return;

@@ -14,7 +14,7 @@ import javax.swing.JComboBox;
  * @author Cedric Chantepie 
  */
 class BindingComboBoxItemListener 
-    extends BindingListenerSupport implements ItemListener {
+    extends BindingListenerSupport<Object> implements ItemListener {
 
     // --- Properties ---
 
@@ -31,7 +31,7 @@ class BindingComboBoxItemListener
      * @param setter Setter used to propagate value
      * @param property Either "selectedItem" or "selectedObjects"
      */
-    protected BindingComboBoxItemListener(final Setter setter,
+    protected BindingComboBoxItemListener(final Setter<Object> setter,
 					  final String property,
                                           final BindingOptionMap options) {
 

@@ -178,9 +178,7 @@ class BindingPostAddListenerHook
 			"observed element = {0}, registry = {1}, path = {2}",
 			new Object[] { pathElmt, registry, this.path });
 
-	final BindingListenerSupport.Setter setter = 
-	    new BindingListenerSupport.Setter(this.path.start);
-
+	final Setter<Object> setter = new Setter<Object>(this.path.start);
 	final BindingPropertyChangeListener plistener = 
 	    new BindingPropertyChangeListener(setter,
 					      pathElmt.getProperty(),
@@ -220,9 +218,7 @@ class BindingPostAddListenerHook
 
 	this.logger.log(Level.FINER, "property = {0}", property);
 
-	final BindingListenerSupport.Setter setter = 
-	    new BindingListenerSupport.Setter(this.path.start);
-
+	final Setter<Object> setter = new Setter<Object>(this.path.start);
 	final BindingComboBoxItemListener ilistener =
 	    new BindingComboBoxItemListener(setter, property, this.options);
 
@@ -252,9 +248,7 @@ class BindingPostAddListenerHook
 			"path element = {0}, registry = {1}",
 			new Object[] { pathElmt, registry });
 
-	final BindingListenerSupport.Setter setter = 
-	    new BindingListenerSupport.Setter(this.path.start);
-
+	final Setter<Object> setter = new Setter<Object>(this.path.start);
 	final BindingSpinnerChangeListener clistener =
 	    new BindingSpinnerChangeListener(setter, this.options);
 
@@ -284,9 +278,7 @@ class BindingPostAddListenerHook
 			"path element = {0}, registry = {1}",
 			new Object[] { pathElmt, registry });
 
-	final BindingListenerSupport.Setter setter = 
-	    new BindingListenerSupport.Setter(this.path.start);
-
+	final Setter<Object> setter = new Setter<Object>(this.path.start);
 	final BindingComponentSizeListener slistener =
 	    new BindingComponentSizeListener(setter, this.options);
 
@@ -321,9 +313,7 @@ class BindingPostAddListenerHook
 
 	    this.logger.finer("Add text listeners for continuous update");
 
-	    final BindingListenerSupport.Setter setter = 
-		new BindingListenerSupport.Setter(this.path.start);
-
+	    final Setter<Object> setter = new Setter<Object>(this.path.start);
 	    final BindingKeyListener klistener = 
                 new BindingKeyListener(setter, this.options);
 	    ArrayList<Object> list = registry.get(BindingListenerCategory.KEY);
@@ -345,9 +335,8 @@ class BindingPostAddListenerHook
 
 	this.logger.finer("Add text listeners without continuous update");
 
-	final BindingListenerSupport.ConditionalSetter setter = 
-	    new BindingListenerSupport.ConditionalSetter(this.path.start,
-							 pathElmt.getValue());
+	final ConditionalSetter<Object> setter = 
+	    new ConditionalSetter<Object>(this.path.start, pathElmt.getValue());
 
 	final BindingTextActionListener alistener =
 	    new BindingTextActionListener(setter, this.options);

@@ -15,7 +15,7 @@ import javax.swing.text.JTextComponent;
  * @author Cedric Chantepie 
  */
 class BindingTextActionListener 
-    extends BindingListenerSupport implements ActionListener {
+    extends BindingListenerSupport<Object> implements ActionListener {
 
     // --- Constructors ---
 
@@ -24,7 +24,7 @@ class BindingTextActionListener
      *
      * @param setter Setter to propagate changes
      */
-    protected BindingTextActionListener(final Setter setter,
+    protected BindingTextActionListener(final Setter<Object> setter,
                                         final BindingOptionMap options) {
 
 	super(setter, options);

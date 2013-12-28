@@ -11,7 +11,7 @@ import java.beans.PropertyChangeEvent;
  * @author Cedric Chantepie 
  */
 class BindingPropertyChangeListener 
-    extends BindingListenerSupport implements PropertyChangeListener {
+    extends BindingListenerSupport<Object> implements PropertyChangeListener {
 
     // --- Properties ---
 
@@ -34,7 +34,7 @@ class BindingPropertyChangeListener
      * @param setter Setter used to propagate value
      * @param watchedProperty Name of property watched by this listener
      */
-    protected BindingPropertyChangeListener(final Setter setter, 
+    protected BindingPropertyChangeListener(final Setter<Object> setter, 
 					    final String watchedProperty,
                                             final BindingOptionMap options) {
 

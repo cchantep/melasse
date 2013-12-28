@@ -14,7 +14,7 @@ import javax.swing.JSpinner;
  * @author Cedric Chantepie 
  */
 class BindingSpinnerChangeListener 
-    extends BindingListenerSupport implements ChangeListener {
+    extends BindingListenerSupport<Object> implements ChangeListener {
 
     // --- Constructors ---
 
@@ -23,7 +23,7 @@ class BindingSpinnerChangeListener
      *
      * @param setter Setter used to propagate value
      */
-    protected BindingSpinnerChangeListener(final Setter setter, 
+    protected BindingSpinnerChangeListener(final Setter<Object> setter, 
                                            final BindingOptionMap options) {
 
 	super(setter, options);
@@ -38,20 +38,20 @@ class BindingSpinnerChangeListener
     public void stateChanged(ChangeEvent evt) {
 	this.logger.log(Level.FINER, "event = {0}", evt);
 
-	Object sourceValue = null;
 	final Object source = evt.getSource();
 
 	this.logger.log(Level.FINER, "source = {0}", source);
 
-	if (source instanceof JSpinner) {
-	    sourceValue = ((JSpinner) source).getValue();
-	} else {
+	if (!(source instanceof JSpinner)) {
 	    this.logger.log(Level.WARNING,
-			    "Unsupported spinner component: {0}",
-			    source);
+			    "Unsupported spinner component: {0}", source);
 
-	    return;
-	} // end of else
+            return;
+        } // end of if
+
+        // ---
+
+        final Object sourceValue = ((JSpinner) source).getValue();
 
 	this.logger.log(Level.FINER, "sourceValue = {0}", sourceValue);
 

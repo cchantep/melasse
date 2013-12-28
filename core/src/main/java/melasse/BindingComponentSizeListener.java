@@ -14,7 +14,7 @@ import java.awt.event.ComponentEvent;
  * @author Cedric Chantepie 
  */
 class BindingComponentSizeListener 
-    extends BindingListenerSupport implements ComponentListener {
+    extends BindingListenerSupport<Object> implements ComponentListener {
 
     // --- Properties ---
 
@@ -31,7 +31,7 @@ class BindingComponentSizeListener
      *
      * @param setter Setter used to propagate value
      */
-    protected BindingComponentSizeListener(final Setter setter,
+    protected BindingComponentSizeListener(final Setter<Object> setter,
                                            final BindingOptionMap options) {
 
 	super(setter, options);

@@ -41,6 +41,34 @@ Using its own object path API allows Melasse to observe 'deep' property, which a
 
 In previous example, even if property `columnModel` of `aJTable` is null when binding is created, as soon as it will be set Melasse will start observing `columnCount` on this newly set property.
 
+### One-to-many
+
+For some type, it's possible have a one-to-many binding, e.g. Enable action only if all related bindings are evaluated to true. 
+
+```java
+import melasse.Binder;
+
+Binder.bind("prop1", sourceRoot,
+            "enabled[]", anAction,
+            optionMap);
+
+Binder.bind("prop2", sourceRoot,
+            "enabled[]", anAction,
+            optionMap);
+
+// anAction is enabled only if both bindings are true
+```
+
+## Component
+
+```java
+import melasse.Binder;
+
+Binder.bind("size", anyAWTComponent, 
+            "targetProp", target, 
+            optionMap);
+```
+
 ## Button/action
 
 UI properties transformed as boolean can be bound to activation of button or action using `enabled` property:
@@ -50,14 +78,6 @@ import melasse.Binder;
 
 Binder.bind("sourcePath", sourceRoot,
             "enabled", anAction,
-            optionMap);
-```
-
-If several UI properties should be bound (e.g. all fields should have value to enable action), aggregation syntax can be used in target path:
-
-```java
-Binder.bind("sourcePath", sourceRoot,
-            "enabled[]", anAction,
             optionMap);
 ```
 
@@ -123,7 +143,7 @@ Binder.bind("visible", errorDisplay, "text", field,
 ## Provided transformers
 
 - AppliedTransformer
-- IntegerToBooleanTransformer
+- IntegerToBooleanTransformer: Returns false if null or 0.
 - NegateBooleanTransformer
 - NotNullTransformer
 
@@ -140,6 +160,10 @@ This is also useful to easily generate change event based on several properties.
 Way bindings are set up can be configured providing options, as firth argument of the `bind` method.
 
 - targetModeOptions: When using a read-only property as binding source. Avoid warning such as `Target object does not support setting value for property X: myInstance@123456`.
+
+## Model classes
+
+- `melasse.swing.TableModel`: Change support for properties `rowCount`, `columnCount`, `dataVector`.
 
 ## Usage
 

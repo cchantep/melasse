@@ -17,8 +17,7 @@ import javax.swing.text.JTextComponent;
  * @see TextBindingKey#CONTINUOUSLY_UPDATE_VALUE
  */
 class BindingKeyListener 
-    extends BindingListenerSupport 
-    implements KeyListener {
+    extends BindingListenerSupport<Object> implements KeyListener {
 
     // --- Constructors ---
 
@@ -27,7 +26,7 @@ class BindingKeyListener
      *
      * @param setter Setter used to propagate value
      */
-    protected BindingKeyListener(final Setter setter, 
+    protected BindingKeyListener(final Setter<Object> setter, 
                                  final BindingOptionMap options) {
 
 	super(setter, options);

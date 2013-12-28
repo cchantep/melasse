@@ -18,7 +18,7 @@ import javax.swing.text.JTextComponent;
  * @author Cedric Chantepie 
  */
 class BindingFocusListener 
-    extends BindingListenerSupport implements FocusListener {
+    extends BindingListenerSupport<Object> implements FocusListener {
 
     // --- Constructors ---
 
@@ -27,7 +27,7 @@ class BindingFocusListener
      *
      * @param setter Setter to propagate changes
      */
-    protected BindingFocusListener(final Setter setter, 
+    protected BindingFocusListener(final Setter<Object> setter, 
                                    final BindingOptionMap options) {
 
 	super(setter, options);
