@@ -9,17 +9,18 @@ import java.awt.Component;
 import java.awt.Toolkit;
 import java.awt.Image;
 
+import javax.swing.SwingConstants;
 import javax.swing.BorderFactory;
+import javax.swing.GroupLayout;
+import javax.swing.JScrollPane;
 import javax.swing.JPanel;
-
-import org.jdesktop.layout.GroupLayout;
 
 import melasse.util.AppUtils;
 
 /**
  * Clock panel.
  *
- * @author Cedric Chantepie ()
+ * @author Cedric Chantepie
  */
 public final class ClockPanel extends JPanel {
     // --- Properties ---
@@ -52,16 +53,16 @@ public final class ClockPanel extends JPanel {
      * @param application Owning application
      */
     protected ClockPanel(Object application) {
-	super();
+        super();
 
-	if (application == null) {
-	    throw new IllegalArgumentException("Owner not specified");
-	} // end of if
+        if (application == null) {
+            throw new IllegalArgumentException("Owner not specified");
+        } // end of if
 
-	// ---
+        // ---
 
-	this.application = application;
-	this.logger = AppUtils.getLogger(this.application);
+        this.application = application;
+        this.logger = AppUtils.getLogger(this.application);
     } // end of <init>
 
     // ---
@@ -70,127 +71,121 @@ public final class ClockPanel extends JPanel {
      * Sets up UI.
      */
     protected void setUpUI() {
-	logger.fine("Will set up clock panel");
+        logger.fine("Will set up clock panel");
 
-	Locale locale = (Locale) AppUtils.
-	    getProperty(this.application, "locale");
+        final Locale locale = (Locale) AppUtils.
+            getProperty(this.application, "locale");
 
-	logger.log(Level.FINER,
-		   "locale = {0}", locale);
+        logger.log(Level.FINER,
+                   "locale = {0}", locale);
 
-	// prepare analog clock
-	this.analogClock = new AnalogClock();
+        // prepare analog clock
+        this.analogClock = new AnalogClock();
 
-	Image clockImg = 
-	    Toolkit.getDefaultToolkit().
-	    getImage(this.getClass().
-		     getResource("/melasse/" +
-				 "clock.jpg"));
+        final Image clockImg = 
+            Toolkit.getDefaultToolkit().
+            getImage(this.getClass().getResource("/melasse/" + "clock.jpg"));
 
-	this.analogClock.setBackgroundImage(clockImg);
-	
-	// prepare labels
-	String analogTitle = AppUtils.
-	    localizedString("melasse.ClockPanel",
-			    locale,
-			    "analog.label");
+        this.analogClock.setBackgroundImage(clockImg);
+        
+        // prepare labels
+        final String analogTitle = AppUtils.
+            localizedString("melasse.ClockPanel",
+                            locale,
+                            "analog.label");
 
-	String digitalTitle = AppUtils.
-	    localizedString("melasse.ClockPanel",
-			    locale,
-			    "digital.label");
+        final String digitalTitle = AppUtils.
+            localizedString("melasse.ClockPanel",
+                            locale,
+                            "digital.label");
 
-	JPanel analog = new JPanel();
-	JPanel digital = new JPanel();
+        final JPanel analog = new JPanel();
+        final JPanel digital = new JPanel();
 
-	analog.setBorder(BorderFactory.
-			 createTitledBorder(analogTitle));
+        analog.setBorder(BorderFactory.
+                         createTitledBorder(analogTitle));
 
-	digital.setBorder(BorderFactory.
-			 createTitledBorder(digitalTitle));
+        digital.setBorder(BorderFactory.
+                          createTitledBorder(digitalTitle));
 
-	// explanation sub-panel
-	ExplanationPanel explain = 
-	    new ExplanationPanel(this.application);
+        // explanation sub-panel
+        final ExplanationPanel explain = new ExplanationPanel(this.application);
 
-	explain.setTitleKey("clock.title");
-	explain.setBodyKey("clock.body");
-	explain.setCodeKey("clock.code");
+        explain.setTitleKey("clock.title");
+        explain.setBodyKey("clock.body");
+        explain.setCodeKey("clock.code");
 
-	explain.setUp();
+        explain.setUp();
 
-	// analog sub-panel
-	analog.add(this.analogClock);
+        // analog sub-panel
+        analog.add(this.analogClock);
 
-	// digital sub-panel
-	this.digitalClock = new DigitalClock();
+        // digital sub-panel
+        this.digitalClock = new DigitalClock();
 
-	digital.add(this.digitalClock);
+        digital.add(this.digitalClock);
 
-	// sets layout
-	GroupLayout layout = new GroupLayout(this);
+        // sets layout
+        final GroupLayout layout = new GroupLayout(this);
 
-	this.setLayout(layout);
+        this.setLayout(layout);
 
-	layout.setAutocreateGaps(true);
-	layout.setAutocreateContainerGaps(true);
+        layout.setAutoCreateGaps(true);
+        layout.setAutoCreateContainerGaps(true);
 
-	// lays out
-	GroupLayout.Group vgroup = 
-	    layout.createParallelGroup(GroupLayout.LEADING).
-	    add(layout.createSequentialGroup().
-		add(analog,
-		    GroupLayout.PREFERRED_SIZE,
-		    GroupLayout.DEFAULT_SIZE,
-		    GroupLayout.PREFERRED_SIZE).
-		add(digital,
-		    GroupLayout.PREFERRED_SIZE,
-		    GroupLayout.DEFAULT_SIZE,
-		    Short.MAX_VALUE)).
-	    add(explain,
-		0,
-		GroupLayout.DEFAULT_SIZE,
-		Short.MAX_VALUE);
+        // lays out
+        final GroupLayout.Group vgroup = 
+            layout.createParallelGroup(GroupLayout.Alignment.LEADING).
+            addGroup(layout.createSequentialGroup().
+                     addComponent(analog,
+                                  GroupLayout.PREFERRED_SIZE,
+                                  GroupLayout.DEFAULT_SIZE,
+                                  GroupLayout.PREFERRED_SIZE).
+                     addComponent(digital,
+                                  GroupLayout.PREFERRED_SIZE,
+                                  GroupLayout.DEFAULT_SIZE,
+                                  Short.MAX_VALUE)).
+            addComponent(explain, 0,
+                         GroupLayout.DEFAULT_SIZE,
+                         Short.MAX_VALUE);
 
-	GroupLayout.Group hgroup = 
-	    layout.createSequentialGroup().
-	    add(layout.createParallelGroup(GroupLayout.CENTER).
-		add(analog,
-		    GroupLayout.PREFERRED_SIZE,
-		    GroupLayout.DEFAULT_SIZE,
-		    GroupLayout.PREFERRED_SIZE).
-		add(digital,
-		    GroupLayout.PREFERRED_SIZE,
-		    GroupLayout.DEFAULT_SIZE,
-		    GroupLayout.PREFERRED_SIZE)).
-	    add(explain,
-		0,
-		GroupLayout.DEFAULT_SIZE,
-		Short.MAX_VALUE);
-	
-	layout.setVerticalGroup(vgroup);
-	layout.setHorizontalGroup(hgroup);
+        final GroupLayout.Group hgroup = 
+            layout.createSequentialGroup().
+            addGroup(layout.
+                     createParallelGroup(GroupLayout.Alignment.CENTER).
+                     addComponent(analog,
+                                  GroupLayout.PREFERRED_SIZE,
+                                  GroupLayout.DEFAULT_SIZE,
+                                  GroupLayout.PREFERRED_SIZE).
+                     addComponent(digital,
+                                  GroupLayout.PREFERRED_SIZE,
+                                  GroupLayout.DEFAULT_SIZE,
+                                  GroupLayout.PREFERRED_SIZE)).
+            addComponent(explain, 0,
+                         GroupLayout.DEFAULT_SIZE,
+                         Short.MAX_VALUE);
+        
+        layout.setVerticalGroup(vgroup);
+        layout.setHorizontalGroup(hgroup);
 
-	layout.linkSize(new Component[] {
-	    analog, digital
-	}, GroupLayout.HORIZONTAL);
+        layout.linkSize(SwingConstants.HORIZONTAL, analog, digital);
     } // end of setUpUI
 
     /**
      * Sets up bindings.
      */
     protected void setUpBindings() {
-	Binder.bind("seconds", this.analogClock,
-		    "secondsModel.value", this.digitalClock,
-		    new BindingOptionMap());
+        Binder.bind("seconds", this.analogClock,
+                    "secondsModel.value", this.digitalClock,
+                    new BindingOptionMap());
 
-	Binder.bind("minutes", this.analogClock,
-		    "minutesModel.value", this.digitalClock,
-		    new BindingOptionMap());
+        Binder.bind("minutes", this.analogClock,
+                    "minutesModel.value", this.digitalClock,
+                    new BindingOptionMap());
 
-	Binder.bind("hours", this.analogClock,
-		    "hoursModel.value", this.digitalClock,
-		    new BindingOptionMap());
+        Binder.bind("hours", this.analogClock,
+                    "hoursModel.value", this.digitalClock,
+                    new BindingOptionMap());
 
     } // end of setUpBindings
 } // end of class ClockPanel

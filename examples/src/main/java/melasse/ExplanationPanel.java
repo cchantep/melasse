@@ -5,18 +5,21 @@ import java.util.Locale;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
-import javax.swing.BorderFactory;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import java.awt.Dimension;
 
-import org.jdesktop.layout.GroupLayout;
+import javax.swing.BorderFactory;
+import javax.swing.JScrollPane;
+import javax.swing.JPanel;
+import javax.swing.JLabel;
+
+import javax.swing.GroupLayout;
 
 import melasse.util.AppUtils;
 
 /**
  * Explanation panel (one per example).
  *
- * @author Cedric Chantepie ()
+ * @author Cedric Chantepie
  */
 public final class ExplanationPanel extends JPanel {
     // --- Properties ---
@@ -24,12 +27,17 @@ public final class ExplanationPanel extends JPanel {
     /**
      * Owing application
      */
-    private Object application = null;
+    private final Object application;
 
     /**
      * Application logger
      */
-    private Logger logger = null;
+    private final Logger logger;
+
+    /**
+     * Scroll pane
+     */
+    private JScrollPane pane = null;
 
     /**
      */
@@ -42,6 +50,22 @@ public final class ExplanationPanel extends JPanel {
     /**
      */
     private String codeKey = null;
+
+    /**
+     */
+    private String body = null;
+
+    /**
+     */
+    private String code = null;
+
+    /**
+     */
+    private JLabel bodyLabel = null;
+
+    /**
+     */
+    private JLabel codeLabel = null;
     
     // --- Constructors ---
 
@@ -50,17 +74,17 @@ public final class ExplanationPanel extends JPanel {
      *
      * @param application Owing application
      */
-    public ExplanationPanel(Object application) {
-	super();
+    public ExplanationPanel(final Object application) {
+        super();
 
-	if (application == null) {
-	    throw new IllegalArgumentException("Owner not specified");
-	} // end of if
+        if (application == null) {
+            throw new IllegalArgumentException("Owner not specified");
+        } // end of if
 
-	// ---
+        // ---
 
-	this.application = application;
-	this.logger = AppUtils.getLogger(this.application);
+        this.application = application;
+        this.logger = AppUtils.getLogger(this.application);
     } // end of <init>
 
     // --- Properties accessors ---
@@ -71,7 +95,7 @@ public final class ExplanationPanel extends JPanel {
      * @param key New title key
      */
     public void setTitleKey(String key) {
-	this.titleKey = key;
+        this.titleKey = key;
     } // end of setTitleKey
 
     /**
@@ -80,7 +104,7 @@ public final class ExplanationPanel extends JPanel {
      * @param key New body textkey
      */
     public void setBodyKey(String key) {
-	this.bodyKey = key;
+        this.bodyKey = key;
     } // end of setBodyKey
 
     /**
@@ -89,7 +113,7 @@ public final class ExplanationPanel extends JPanel {
      * @param key New code key
      */
     public void setCodeKey(String key) {
-	this.codeKey = key;
+        this.codeKey = key;
     } // end of setCodeKey
 
     // ---
@@ -98,73 +122,97 @@ public final class ExplanationPanel extends JPanel {
      * Sets up UI
      */
     protected void setUp() {
-	logger.fine("Will set up explanation panel");
+        logger.fine("Will set up explanation panel");
 
-	Locale locale = (Locale) AppUtils.
-	    getProperty(this.application, "locale");
+        final Locale locale = (Locale) AppUtils.
+            getProperty(this.application, "locale");
 
-	logger.log(Level.FINER,
-		   "locale = {0}, title key = {1}, body key = {2}, code key = {2}", new Object[] { locale, titleKey, bodyKey, codeKey });
+        logger.log(Level.FINER, "locale = {0}, title key = {1}, body key = {2}, code key = {2}", new Object[] { locale, titleKey, bodyKey, codeKey });
 
-	String title = AppUtils.
-	    localizedString("melasse.ExplanationPanel",
-			    locale,
-			    titleKey);
+        final String title = AppUtils.
+            localizedString("melasse.ExplanationPanel", locale, titleKey);
 
-	String body = AppUtils.
-	    localizedString("melasse.ExplanationPanel",
-			    locale,
-			    bodyKey);
+        this.body = AppUtils.
+            localizedString("melasse.ExplanationPanel", locale, bodyKey);
 
-	String code = AppUtils.
-	    localizedString("melasse.ExplanationPanel",
-			    locale,
-			    codeKey);
-	
-	logger.log(Level.FINER,
-		   "title = {0}, body = {1}, code = {2}",
-		   new Object[] { title, body, code });
+        this.code = AppUtils.
+            localizedString("melasse.ExplanationPanel", locale, codeKey);
+        
+        logger.log(Level.FINER, "title = {0}, body = {1}, code = {2}",
+                   new Object[] { title, body, code });
 
-	setBorder(BorderFactory.createTitledBorder(title));
+        setBorder(BorderFactory.createTitledBorder(title));
 
-	GroupLayout layout = new GroupLayout(this);
+        final JPanel content = new JPanel();
+        this.pane = new JScrollPane(content);
 
-	this.setLayout(layout);
+        pane.setBackground(java.awt.Color.WHITE);
+        pane.setBorder(null);
+        add(pane);
 
-	layout.setAutocreateGaps(true);
-	layout.setAutocreateContainerGaps(true);
+        final GroupLayout layout = new GroupLayout(content);
 
-	JLabel bodyLabel = new JLabel("<html><font face=\"Times New Roman\">" + body + "</font></html>");
+        content.setBorder(null);
+        content.setLayout(layout);
+        content.setBackground(java.awt.Color.WHITE);
 
-	JLabel codeLabel = new JLabel("<html><code>" + code + 
-				      "</code></html>");
+        layout.setAutoCreateGaps(true);
+        layout.setAutoCreateContainerGaps(true);
 
-	codeLabel.setForeground(java.awt.Color.BLUE);
+        this.bodyLabel = 
+            new JLabel("<html><body><font face=\"Times New Roman\">" + 
+                       this.body + "</font></body></html>");
 
-	// Lays out
-	GroupLayout.Group vgroup = 
-	    layout.createSequentialGroup().
-	    add(bodyLabel,
-		GroupLayout.PREFERRED_SIZE,
-		GroupLayout.DEFAULT_SIZE,
-		GroupLayout.PREFERRED_SIZE).
-	    add(codeLabel,
-		GroupLayout.PREFERRED_SIZE,
-		GroupLayout.DEFAULT_SIZE,
-		Short.MAX_VALUE);
+        this.codeLabel = 
+            new JLabel("<html><code>" + this.code + "</code></html>");
 
-	GroupLayout.Group hgroup = 
-	    layout.createParallelGroup(GroupLayout.CENTER).
-	    add(bodyLabel,
-		0,
-		GroupLayout.DEFAULT_SIZE,
-		Short.MAX_VALUE).
-	    add(codeLabel,
-		0,
-		GroupLayout.DEFAULT_SIZE,
-		Short.MAX_VALUE);
+        codeLabel.setForeground(java.awt.Color.BLUE);
 
-	layout.setVerticalGroup(vgroup);
-	layout.setHorizontalGroup(hgroup);
+        // Lays out
+        final GroupLayout.Group vgroup = 
+            layout.createSequentialGroup().
+            addComponent(this.bodyLabel,
+                         GroupLayout.PREFERRED_SIZE,
+                         GroupLayout.DEFAULT_SIZE,
+                         GroupLayout.PREFERRED_SIZE).
+            addComponent(this.codeLabel,
+                         GroupLayout.PREFERRED_SIZE,
+                         GroupLayout.DEFAULT_SIZE,
+                         Short.MAX_VALUE);
+
+        final GroupLayout.Group hgroup = 
+            layout.createParallelGroup(GroupLayout.Alignment.CENTER).
+            addComponent(this.bodyLabel, 0,
+                         GroupLayout.DEFAULT_SIZE,
+                         Short.MAX_VALUE).
+            addComponent(this.codeLabel, 0,
+                         GroupLayout.DEFAULT_SIZE,
+                         Short.MAX_VALUE);
+
+        layout.setVerticalGroup(vgroup);
+        layout.setHorizontalGroup(hgroup);
+
+        // Bindings
+        Binder.bind("size", this, "componentSize", this, 
+                    BindingOptionMap.targetModeOptions);
+
     } // end of setUp
+
+    /**
+     * Takes |size| of this component on screen.
+     */
+    public void setComponentSize(final Dimension size) {
+        final java.awt.Insets insets = getBorder().getBorderInsets(this);
+        final int w = size.width - insets.left - insets.right;
+        final int h = size.height - insets.top - insets.bottom;
+
+        this.pane.setPreferredSize(new Dimension(w, h));
+
+        System.out.println("W => " + this.pane.getViewport().getWidth());
+
+        this.bodyLabel.setText("<html><body style=\"width:"+(w-100)+"px\"><font face=\"Times New Roman\">" + this.body + "</font></body></html>");
+
+        this.codeLabel.setText("<html><code style=\"width:"+w+"px\">" + this.code + "</code></html>");
+        
+    } // end of setComponentSize
 } // end of class ExplanationPanel
