@@ -1,6 +1,6 @@
 package melasse;
 
-import java.text.NumberFormat;
+import java.text.Format;
 
 /**
  * Transforms a Number to a String.
@@ -14,7 +14,7 @@ public class NumberToStringTransformer implements UnaryFunction<Number,String> {
     /**
      * Number format
      */
-    private final NumberFormat format;
+    private final Format format;
 
     // --- Constructors ---
 
@@ -23,7 +23,7 @@ public class NumberToStringTransformer implements UnaryFunction<Number,String> {
      *
      * @param format Number format used for transformation
      */
-    private NumberToStringTransformer(final NumberFormat format) {
+    private NumberToStringTransformer(final Format format) {
 	if (format == null) {
 	    throw new IllegalArgumentException("Invalid number format: " +
 					       format);
@@ -38,7 +38,7 @@ public class NumberToStringTransformer implements UnaryFunction<Number,String> {
      *
      * @param format Number format used for transformation
      */
-    public static NumberToStringTransformer getInstance(NumberFormat format) {
+    public static NumberToStringTransformer getInstance(Format format) {
 	return new NumberToStringTransformer(format);
     } // end of getInstance
 
@@ -55,6 +55,6 @@ public class NumberToStringTransformer implements UnaryFunction<Number,String> {
 	    return null;
 	} // end of if
 
-	return this.format.format(value);
+	return this.format.format(new Number[] { value });
     } // end of transform
 } // end of class NumberToStringTransformer

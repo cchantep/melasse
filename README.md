@@ -102,6 +102,32 @@ Most interesting transformers for text components are:
 - StringLengthToBooleanTransformer
 - StringToCharArrayTransformer
 
+## Numbers
+
+Numeric properties can be bound, from model or from component, with specific options:
+
+```java
+import melasse.NumericBindingKey;
+import melasse.BindingOptionMap;
+
+BindingOptionMap opts1 = new BindingOptionMap().
+  add(NumericBindingKey.BIGINTEGER_TO_INTEGER);
+
+BindingOptionMap opts2 = new BindingOptionMap().
+  add(NumericBindingKey.INTEGER_TO_BIGINTEGER);
+```
+
+Number can also be bound to string using a [format](http://docs.oracle.com/javase/7/docs/api/java/text/MessageFormat.html):
+
+```java
+import melasse.NumberToStringTransformer;
+
+Binder.bind("numberProp", source, "text", aLabel,
+            new BindingOptionMap().add(BindingKey.INPUT_TRANSFORMER,
+                NumberToStringTransformer.
+                getInstance(aJavaTextFormat)));
+```
+
 ### Bind button/action to provided value
 
 Enable button/action only if value is provided to a text component:
