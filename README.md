@@ -163,7 +163,7 @@ Way bindings are set up can be configured providing options, as firth argument o
 
 ## Model classes
 
-- `melasse.swing.TableModel`: Change support for properties `rowCount`, `columnCount`, `dataVector`.
+- `melasse.swing.TableModel`: Change support for properties `rowCount`, `columnCount`, `dataVector`, using new method `.willChange()`.
 
 ## Usage
 

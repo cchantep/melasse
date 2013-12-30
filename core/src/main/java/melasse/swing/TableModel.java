@@ -102,8 +102,8 @@ public class TableModel extends DefaultTableModel {
     /**
      * {@inheritDocs}
      */
-    public void setColumnCount(int columnCount) {
-	PropertyChangeSupport.PropertyEditSession s = 
+    public void setColumnCount(final int columnCount) {
+	final PropertyChangeSupport.PropertyEditSession s = 
 	    pcs.propertyWillChange("columnCount");
 	
 	super.setColumnCount(columnCount);
@@ -114,8 +114,8 @@ public class TableModel extends DefaultTableModel {
     /**
      * {@inheritDocs}
      */
-    public void addColumn(Object columnName) {
-	PropertyChangeSupport.PropertyEditSession s = 
+    public void addColumn(final Object columnName) {
+	final PropertyChangeSupport.PropertyEditSession s = 
 	    pcs.propertyWillChange("columnCount");	
 
 	super.addColumn(columnName);
@@ -126,10 +126,8 @@ public class TableModel extends DefaultTableModel {
     /**
      * {@inheritDocs}
      */
-    public void addColumn(Object columnName,
-			  Vector columnData) {
-
-	PropertyChangeSupport.PropertyEditSession s = 
+    public void addColumn(final Object columnName, final Vector columnData) {
+	final PropertyChangeSupport.PropertyEditSession s = 
 	    pcs.propertyWillChange("columnCount");
 
 	super.addColumn(columnName, columnData);
@@ -140,10 +138,10 @@ public class TableModel extends DefaultTableModel {
     /**
      * {@inheritDocs}
      */
-    public void addColumn(Object columnName,
-			  Object[] columnData) {
+    public void addColumn(final Object columnName,
+			  final Object[] columnData) {
 
-	PropertyChangeSupport.PropertyEditSession s = 
+	final PropertyChangeSupport.PropertyEditSession s = 
 	    pcs.propertyWillChange("columnCount");
 
 	super.addColumn(columnName, columnData);
@@ -152,28 +150,21 @@ public class TableModel extends DefaultTableModel {
     } // end of setColumnCount
 
     /**
-     * {@inheritDocs}
+     * Call this before changing either structure or data of table.
+     *
+     * <code>
+     * final PropertyChangeSupport.PropertyEditSession s = 
+     *   tableModel.willChange();
+     *
+     * // Apply data/struct changes
+     *
+     * s.propertyDidChange(); // fire properties events
+     * </code>
      */
-    public void fireTableRowsInserted(int firstRow,
-				      int lastRow) {
-
-	PropertyChangeSupport.PropertyEditSession s = 
-	    pcs.propertyWillChange("rowCount");
-
-	super.fireTableRowsInserted(firstRow, lastRow);
-
-	s.propertyDidChange();
-    } // end of fireTableRowsInserted
-
-    /**
-     * {@inheritDocs}
-     */
-    public void fireTableDataChanged() {
-	PropertyChangeSupport.PropertyEditSession s = 
-	    pcs.propertyWillChange("dataVector");
-
-	super.fireTableDataChanged();
-
-	s.propertyDidChange();
-    } // end of fireTableDataChanged
+    public PropertyChangeSupport.PropertyEditSession willChange() {
+        return pcs.propertyWillChange("columnCount").
+            chain(pcs.propertyWillChange("rowCount")).
+            chain(pcs.propertyWillChange("dataVector"));
+        
+    } // end of willChange
 } // end of class TableModel

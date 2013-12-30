@@ -136,12 +136,12 @@ public class PropertyChangeSupport<T> extends java.beans.PropertyChangeSupport {
      * @see #registerDependency
      * @see #propertyDidChange
      */
-    public PropertyEditSession propertyWillChange(final String propertyName) {
+    public PropertyEditSession<Object> propertyWillChange(final String propertyName) {
 	this.logger.log(Level.FINER, "Property will change: {0}", propertyName);
 
 	final Object value = Binder.getValue(this.sourceBean, propertyName);
-	final PropertyEditSession session = 
-            new PropertyEditSession(propertyName, value);
+	final PropertyEditSession<Object> session = 
+            new PropertyEditSession<Object>(propertyName, value);
 
 	synchronized(this.values) {
 	    this.logger.log(Level.FINER,
@@ -184,9 +184,9 @@ public class PropertyChangeSupport<T> extends java.beans.PropertyChangeSupport {
     /**
      * {@inheritDoc}
      */
-    public void firePropertyChange(PropertyChangeEvent evt) {
-	Object oldVal = evt.getOldValue();
-	Object newVal = evt.getNewValue();
+    public void firePropertyChange(final PropertyChangeEvent evt) {
+	final Object oldVal = evt.getOldValue();
+	final Object newVal = evt.getNewValue();
 
 	if (oldVal != null && oldVal.equals(newVal)) {
 	    return;
@@ -194,7 +194,7 @@ public class PropertyChangeSupport<T> extends java.beans.PropertyChangeSupport {
 
 	// ---
 
-	String propertyName = evt.getPropertyName();
+	final String propertyName = evt.getPropertyName();
 
 	super.firePropertyChange(evt);
 
@@ -363,23 +363,23 @@ public class PropertyChangeSupport<T> extends java.beans.PropertyChangeSupport {
      *
      * @author Cedric Chantepie 
      */
-    public class PropertyEditSession {
+    public class PropertyEditSession<T> {
 	// --- Properties ---
 
 	/**
 	 * Name of property
 	 */
-	private String propertyName = null;
+	private final String propertyName;
 
 	/**
 	 * Initial value, before editing property
 	 */
-	private Object value = null;
+	private final T value;
 
 	/**
 	 * Chained session (dependent properties or included)
 	 */
-	private Vector<PropertyEditSession> sessions = null;
+	private final Vector<PropertyEditSession> sessions;
 
 	// --- Constructors ---
 
@@ -389,8 +389,8 @@ public class PropertyChangeSupport<T> extends java.beans.PropertyChangeSupport {
 	 * @param propertyName Name of property
 	 * @param value Initial property value
 	 */
-	private PropertyEditSession(String propertyName,
-				    Object value) {
+	private PropertyEditSession(final String propertyName,
+				    final T value) {
 
 	    this.propertyName = propertyName;
 	    this.value = value;
@@ -410,18 +410,16 @@ public class PropertyChangeSupport<T> extends java.beans.PropertyChangeSupport {
 	 * @see PropertyChangeSupport#firePropertyChange(java.lang.String,java.lang.Object,java.lang.Object)
 	 */
 	public void propertyDidChange() {
-	    logger.log(Level.FINE,
-		       "Property did change: {0}", 
-		       this.propertyName);
+	    logger.log(Level.FINE, 
+                       "Property did change: {0}", this.propertyName);
 
-	    Object newValue = Binder.
-		getValue(sourceBean, 
-			 this.propertyName);
+	    final Object newValue = 
+                Binder.getValue(sourceBean, this.propertyName);
 	    
 	    firePropertyChange(this.propertyName, 
 			       this.value, newValue);
 
-	    for (PropertyEditSession s : this.sessions) {
+	    for (final PropertyEditSession s : this.sessions) {
 		s.propertyDidChange();
 	    } // end of for
 	} // end of propertyDidChange
@@ -433,16 +431,17 @@ public class PropertyChangeSupport<T> extends java.beans.PropertyChangeSupport {
 	 *
 	 * @param session Session to be chained (after) this one
 	 */
-	public void chain(PropertyEditSession session) {
+	public PropertyEditSession chain(final PropertyEditSession session) {
 	    if (session == null) {
 		logger.log(Level.WARNING,
-			   "Cannot chain null edit session: {0}",
-			   session);
+			   "Cannot chain null edit session: {0}", session);
 
-		return;
+		return this;
 	    } // end of if
 
 	    this.sessions.add(session);
+
+            return this;
 	} // end of chain
     } // end of class PropertyEditSession
 } // end of class PropertyChangeSupport
