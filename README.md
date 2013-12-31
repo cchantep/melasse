@@ -59,6 +59,23 @@ Binder.bind("prop2", sourceRoot,
 // anAction is enabled only if both bindings are true
 ```
 
+### Mediator
+
+Mediator factory can be configured either on source or target path, in order to wrap referenced object so that property can be observed or set.
+
+```java
+BindingOptionMap opts = new BindingOptionMap().
+  add(BindingKey.INPUT_MEDIATOR_FACTORY, factoryToWrapSource).
+  add(BindingKey.OUTPUT_MEDIATOR_FACTORY, factoryToWrapTarget);
+```
+
+## Provided transformers
+
+- AppliedTransformer
+- IntegerToBooleanTransformer: Returns false if null or 0.
+- NegateBooleanTransformer
+- NotNullTransformer
+
 ## Component
 
 ```java
@@ -102,6 +119,25 @@ Most interesting transformers for text components are:
 - StringLengthToBooleanTransformer
 - StringToCharArrayTransformer
 
+### Bind button/action to provided value
+
+Enable button/action only if value is provided to a text component:
+
+```java
+import melasse.StringLengthToBooleanTransformer;
+import melasse.BindingOptionMap;
+import melasse.TextBindingKey;
+import melasse.Binder;
+
+Binder.bind("text", textComponent,
+            "enabled", anAction,
+            new BindingOptionMap().
+            add(BindingKey.INPUT_TRANSFORMER,
+                StringLengthToBooleanTransformer.
+                getTrimmingInstance()).
+                add(TextBindingKey.CONTINUOUSLY_UPDATE_VALUE));
+```
+
 ## Numbers
 
 Numeric properties can be bound, from model or from component, with specific options:
@@ -128,25 +164,6 @@ Binder.bind("numberProp", source, "text", aLabel,
                 getInstance(aJavaTextFormat)));
 ```
 
-### Bind button/action to provided value
-
-Enable button/action only if value is provided to a text component:
-
-```java
-import melasse.StringLengthToBooleanTransformer;
-import melasse.BindingOptionMap;
-import melasse.TextBindingKey;
-import melasse.Binder;
-
-Binder.bind("text", textComponent,
-            "enabled", anAction,
-            new BindingOptionMap().
-            add(BindingKey.INPUT_TRANSFORMER,
-                StringLengthToBooleanTransformer.
-                getTrimmingInstance()).
-                add(TextBindingKey.CONTINUOUSLY_UPDATE_VALUE));
-```
-
 ## Bind error display
 
 Visibility of error can be directly bound using `JLabel.visible` as endpoint.
@@ -166,12 +183,17 @@ Binder.bind("visible", errorDisplay, "text", field,
 // |errorDisplay| will be visible when |field| is empty
 ```
 
-## Provided transformers
+## List selection model
 
-- AppliedTransformer
-- IntegerToBooleanTransformer: Returns false if null or 0.
-- NegateBooleanTransformer
-- NotNullTransformer
+Melasse provide a specific support to bind following [list selection](http://docs.oracle.com/javase/7/docs/api/javax/swing/ListSelectionModel.html) properties: `selectionEmpty`, `minSelectionIndex` (first selected index, or -1) and `maxSelectionIndex`.
+
+```java
+import melasse.NegateBooleanTransformer;
+
+Binder.bind("selectionEmpty", aSelectionModel, "enabled", anAction,
+            new BindingOptionMap().add(BindingKey.INPUT_TRANSFORMER,
+              NegateBooleanTransformer.getInstance()));
+```
 
 ## Enhanced property change support
 

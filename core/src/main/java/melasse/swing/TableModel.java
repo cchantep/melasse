@@ -12,6 +12,7 @@ import melasse.PropertyChangeSupport;
  * Table model with property change support.
  *
  * @author Cedric Chantepie 
+ * @todo Deprecate by implementing Table*ModelListener
  */
 public class TableModel extends DefaultTableModel {
     // --- Properties ---

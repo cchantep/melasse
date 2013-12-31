@@ -17,7 +17,6 @@ import java.lang.reflect.Method;
  * and fire property changes for concerned properties and objects.
  *
  * @author Cedric Chantepie 
- * @todo Magic mediator add PCS
  */
 public class Binder {
     // --- Shared ---
@@ -461,7 +460,7 @@ public class Binder {
             if (!categories.containsKey(category)) {
                 final String methodName = category.getAddMethodName();
 
-                logger.log(Level.FINER,
+                logger.log(Level.FINER, 
                            "expected method name = {0}", methodName);
 
                 try {
@@ -470,8 +469,7 @@ public class Binder {
                     for (int i = 0; i < methods.length && 
                              meth == null; i++) {
 
-                        logger.log(Level.FINER,
-                                   "method = {0}", methods[i]);
+                        logger.log(Level.FINER, "method = {0}", methods[i]);
 
                         if (methodName.equals(methods[i].getName()) &&
                             methods[i].getParameterTypes().length == 1) {

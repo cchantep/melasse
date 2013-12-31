@@ -199,20 +199,12 @@ class ObjectPathElement implements PropertyChangeListener {
 	final Object target = this.objectRef.get();
 
 	this.logger.log(Level.FINER, 
-			"Will set target as mediator: {0}", target);
+			"Will set target as mediator: {0} (factory = {1})", 
+                        new Object[] { target, this.mediatorFactory });
 
-	MediatorFactory.MediatorObject obj = null;
-	
-	this.logger.log(Level.FINER,
-			"mediator factory = {0}",
-			this.mediatorFactory);
-	
-	if (this.mediatorFactory != null) {
-	    obj = this.mediatorFactory.getMediator(target);
-	} // end of if
-	
-	this.logger.log(Level.FINER,
-			"mediator object = {0}", obj);
+	final MediatorFactory.MediatorObject obj = 
+            (this.mediatorFactory == null) ? null 
+            : this.mediatorFactory.getMediator(target);
 	
 	if (obj == null) {
 	    this.logger.finer("No mediator for object");
@@ -275,10 +267,7 @@ class ObjectPathElement implements PropertyChangeListener {
 
         // ---
 
-	final MediatorFactory.MediatorObject mediator =
-	    (MediatorFactory.MediatorObject) target;
-
-	return (mediator.get() != null);
+	return ((MediatorFactory.MediatorObject) target).get() != null;
     } // end of isTargetReachable
 
     /**
@@ -293,8 +282,7 @@ class ObjectPathElement implements PropertyChangeListener {
 	    MediatorFactory.MediatorObject obj = null;
 
 	    this.logger.log(Level.FINER,
-			    "mediator factory = {0}",
-			    this.mediatorFactory);
+			    "mediator factory = {0}", this.mediatorFactory);
 
 	    if (this.mediatorFactory != null) {
 		obj = this.mediatorFactory.getMediator(target);

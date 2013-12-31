@@ -48,7 +48,13 @@ public enum BindingListenerCategory {
      * Category for KeyListener
      * @see java.awt.event.KeyListener
      */
-    KEY("key");
+    KEY("key"),
+
+    /**
+     * Category for ListSelectionListener
+     * @see javax.swing.event.ListSelectionListener
+     */
+    LIST_SELECTION("listSelection");
 
     // --- Properties ---
 
@@ -74,26 +80,24 @@ public enum BindingListenerCategory {
      * Returns name of method to add listener belonging to this category.
      */
     public String getAddMethodName() {
-	String n = this.name;
-	StringBuffer buff = new StringBuffer("add").
+	final String n = this.name;
+	return new StringBuffer("add").
 	    append(Character.toUpperCase(n.charAt(0))).
 	    append(n.substring(1)).
-	    append("Listener");
+	    append("Listener").toString();
 
-	return buff.toString();
     } // end of getAddMethodName
 
     /**
      * Returns name of method to remove listener belonging to this category.
      */
     public String getRemoveMethodName() {
-	String n = this.name;
-	StringBuffer buff = new StringBuffer("remove").
+	final String n = this.name;
+	return new StringBuffer("remove").
 	    append(Character.toUpperCase(n.charAt(0))).
 	    append(n.substring(1)).
-	    append("Listener");
+	    append("Listener").toString();
 
-	return buff.toString();
     } // end of getRemoveMethodName
 
     /**

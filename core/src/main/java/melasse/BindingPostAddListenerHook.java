@@ -9,6 +9,7 @@ import java.util.logging.Level;
 import java.awt.TextComponent;
 import java.awt.Component;
 
+import javax.swing.ListSelectionModel;
 import javax.swing.JComboBox;
 import javax.swing.JSpinner;
 
@@ -68,13 +69,21 @@ class BindingPostAddListenerHook
 	this.logger.log(Level.FINER, "options = {0}, observed element = {1}, associated path = {2}", new Object[] { options, observedElmt, path });
 
 	final Object targetObject = observedElmt.getTargetObject();
-
-	this.logger.log(Level.FINER,
-			"target object = {0}", targetObject);
-
 	final String property = observedElmt.getProperty();
 
-	this.logger.log(Level.FINER, "property = {0}", property);
+	this.logger.log(Level.FINER, 
+                        "target object = {0}, property = {1}", 
+                        new Object[] { targetObject, property });
+
+        if ((targetObject instanceof ListSelectionModel) &&
+            ("selectionEmpty".equals(property) ||
+             "minSelectionIndex".equals(property) ||
+             "maxSelectionIndex".equals(property))) {
+
+            addListSelectionListeners(observedElmt, registry);
+            
+            return;
+        } // end of if
 
 	if ((targetObject instanceof TextComponent) &&
 	    "text".equals(property)) {
@@ -87,9 +96,9 @@ class BindingPostAddListenerHook
             if (editable) {
                 addTextListeners(observedElmt, registry);
             } else {
-                // TODO: Workaround - convert text event to property one
-                final BindingTextListener tl = 
-                    new BindingTextListener(textComp, this.options);
+                final BindingTextEventListener.TextListener tl = 
+                    new BindingTextEventListener.TextListener(textComp, 
+                                                              this.options);
 
                 textComp.addTextListener(tl);
 
@@ -99,8 +108,8 @@ class BindingPostAddListenerHook
 	    return;
 	} // end of if
 
-	if ((targetObject instanceof JTextComponent) &&
-	    "text".equals(property)) {
+	if ((targetObject instanceof JTextComponent) && 
+            "text".equals(property)) {
 
 	    this.logger.fine("Will add text listeners");
 
@@ -110,9 +119,9 @@ class BindingPostAddListenerHook
             if (editable) {
                 addTextListeners(observedElmt, registry);
             } else {
-                // Workaround - redirect text event to property change
-                final BindingDocumentListener dl = 
-                    new BindingDocumentListener(textComp, this.options);
+                final BindingTextEventListener.DocumentListener dl = 
+                    new BindingTextEventListener.DocumentListener(textComp, 
+                                                                  this.options);
 
                 textComp.getDocument().addDocumentListener(dl);
 
@@ -167,6 +176,26 @@ class BindingPostAddListenerHook
     } // end of afterAddListeners
 
     /**
+     * Adds listeners for list selection.
+     *
+     * @param pathElmt
+     * @param registry Listeners registry
+     */
+    private void addListSelectionListeners(final ObjectPathElement pathElmt, final Map<BindingListenerCategory,ArrayList<Object>> registry) {
+
+	this.logger.log(Level.FINER,
+			"observed element = {0}, registry = {1}, path = {2}",
+			new Object[] { pathElmt, registry, this.path });
+
+	final Setter<Object> setter = new Setter<Object>(this.path.start);
+        addListener(registry, BindingListenerCategory.LIST_SELECTION,
+                    new BindingListSelectionListener(setter, 
+                                                     pathElmt.getProperty(), 
+                                                     this.options));
+
+    } // end of addListSelectionListeners
+
+    /**
      * Adds listeners for property change.
      *
      * @param pathElmt
@@ -179,27 +208,16 @@ class BindingPostAddListenerHook
 			new Object[] { pathElmt, registry, this.path });
 
 	final Setter<Object> setter = new Setter<Object>(this.path.start);
-	final BindingPropertyChangeListener plistener = 
+	final BindingPropertyChangeListener pl = 
 	    new BindingPropertyChangeListener(setter,
 					      pathElmt.getProperty(),
                                               this.options);
 
 	if (options.containsKey(BindingKey.ALLOW_NULL_CHANGE)) {
-	    plistener.setAllowNullChange(true);
+	    pl.setAllowNullChange(true);
 	} // end of if
 
-	ArrayList<Object> list = registry.
-            get(BindingListenerCategory.PROPERTY_CHANGE);
-
-	if (list != null) {
-	    list.add(plistener);
-	} else {
-	    list = new ArrayList<Object>(1);
-
-	    list.add(plistener);
-
-	    registry.put(BindingListenerCategory.PROPERTY_CHANGE, list);
-	} // end of else	
+        addListener(registry, BindingListenerCategory.PROPERTY_CHANGE, pl);
     } // end of addPropertyListeners
 
     /**
@@ -219,20 +237,11 @@ class BindingPostAddListenerHook
 	this.logger.log(Level.FINER, "property = {0}", property);
 
 	final Setter<Object> setter = new Setter<Object>(this.path.start);
-	final BindingComboBoxItemListener ilistener =
-	    new BindingComboBoxItemListener(setter, property, this.options);
+        addListener(registry, BindingListenerCategory.ITEM,
+                    new BindingComboBoxItemListener(setter, 
+                                                    property, 
+                                                    this.options));
 
-	ArrayList<Object> list = registry.get(BindingListenerCategory.ITEM);
-
-	if (list != null) {
-	    list.add(ilistener);
-	} else {
-	    list = new ArrayList<Object>(1);
-
-	    list.add(ilistener);
-
-	    registry.put(BindingListenerCategory.ITEM, list);
-	} // end of else	
     } // end of addComboBoxListeners
 
     /**
@@ -241,29 +250,16 @@ class BindingPostAddListenerHook
      * @param pathElmt
      * @param registry Listeners registry
      */
-    private void addSpinnerListeners(ObjectPathElement pathElmt,
-				     final Map<BindingListenerCategory,ArrayList<Object>> registry) {
+    private void addSpinnerListeners(final ObjectPathElement pathElmt, final Map<BindingListenerCategory,ArrayList<Object>> registry) {
 
 	this.logger.log(Level.FINER,
 			"path element = {0}, registry = {1}",
 			new Object[] { pathElmt, registry });
 
 	final Setter<Object> setter = new Setter<Object>(this.path.start);
-	final BindingSpinnerChangeListener clistener =
-	    new BindingSpinnerChangeListener(setter, this.options);
+        addListener(registry, BindingListenerCategory.CHANGE,
+                    new BindingSpinnerChangeListener(setter, this.options));
 
-	ArrayList<Object> list = registry.
-	    get(BindingListenerCategory.CHANGE);
-
-	if (list != null) {
-	    list.add(clistener);
-	} else {
-	    list = new ArrayList<Object>(1);
-
-	    list.add(clistener);
-
-	    registry.put(BindingListenerCategory.CHANGE, list);
-	} // end of else	
     } // end of addSpinnerListeners
 
     /**
@@ -279,21 +275,9 @@ class BindingPostAddListenerHook
 			new Object[] { pathElmt, registry });
 
 	final Setter<Object> setter = new Setter<Object>(this.path.start);
-	final BindingComponentSizeListener slistener =
-	    new BindingComponentSizeListener(setter, this.options);
+        addListener(registry, BindingListenerCategory.COMPONENT,
+                    new BindingComponentSizeListener(setter, this.options));
 
-	ArrayList<Object> list = registry.
-	    get(BindingListenerCategory.COMPONENT);
-
-	if (list != null) {
-	    list.add(slistener);
-	} else {
-	    list = new ArrayList<Object>(1);
-
-	    list.add(slistener);
-
-	    registry.put(BindingListenerCategory.COMPONENT, list);
-	} // end of else
     } // end of addComponentSizeListeners
 
     /**
@@ -314,19 +298,8 @@ class BindingPostAddListenerHook
 	    this.logger.finer("Add text listeners for continuous update");
 
 	    final Setter<Object> setter = new Setter<Object>(this.path.start);
-	    final BindingKeyListener klistener = 
-                new BindingKeyListener(setter, this.options);
-	    ArrayList<Object> list = registry.get(BindingListenerCategory.KEY);
-
-	    if (list != null) {
-		list.add(klistener);
-	    } else {
-		list = new ArrayList<Object>(1);
-
-		list.add(klistener);
-
-		registry.put(BindingListenerCategory.KEY, list);
-	    } // end of else
+            addListener(registry, BindingListenerCategory.KEY,
+                        new BindingKeyListener(setter, this.options));
 	    
 	    return;
 	} // end of if
@@ -338,172 +311,30 @@ class BindingPostAddListenerHook
 	final ConditionalSetter<Object> setter = 
 	    new ConditionalSetter<Object>(this.path.start, pathElmt.getValue());
 
-	final BindingTextActionListener alistener =
-	    new BindingTextActionListener(setter, this.options);
+        addListener(registry, BindingListenerCategory.ACTION, 
+                    new BindingTextActionListener(setter, this.options));
 
-	final BindingFocusListener flistener =
-	    new BindingFocusListener(setter, this.options);
+        addListener(registry, BindingListenerCategory.FOCUS,
+                    new BindingFocusListener(setter, this.options));
 
-	ArrayList<Object> list = registry.get(BindingListenerCategory.ACTION);
-
-	if (list != null) {
-	    list.add(alistener);
-	} else {
-	    list = new ArrayList<Object>(1);
-
-	    list.add(alistener);
-
-	    registry.put(BindingListenerCategory.ACTION, list);
-	} // end of else
-
-	list = registry.get(BindingListenerCategory.FOCUS);
-
-	if (list != null) {
-	    list.add(flistener);
-	} else {
-	    list = new ArrayList<Object>(1);
-
-	    list.add(flistener);
-
-	    registry.put(BindingListenerCategory.FOCUS, list);
-	} // end of else
     } // end of addTextListeners
 
-    // --- Inner classes ---
-
     /**
-     * Base for listener of converted text event.
+     * Adds |listener| of given |category| into in-memory |registry|.
+     *
+     * @return Listener list
      */
-    private abstract class ConvertedTextEventListener<C extends Component> {
+    private static ArrayList<Object> addListener(final Map<BindingListenerCategory,ArrayList<Object>> registry, final BindingListenerCategory category, final Object listener) {
 
-        // --- Properties ---
+        if (!registry.containsKey(category)) {
+            registry.put(category, new ArrayList<Object>(1));
+        } // end of if
+        
+        final ArrayList<Object> list = registry.
+            get(category);
 
-        /**
-         * Text component
-         */
-        protected final C component;
+        list.add(listener);
 
-        /**
-         * Text before change
-         */
-        private String text;
-
-        /**
-         * Binding options
-         */
-        private BindingOptionMap options;
-
-        // --- Constructor ---
-
-        /**
-         * Bulk constructor.
-         *
-         * @param component Observed text component
-         */
-        ConvertedTextEventListener(final C component, 
-                                   final String text,
-                                   final BindingOptionMap options) {
-
-            this.component = component;
-            this.text = text;
-            this.options = options;
-        } // end of <init>
-
-        // ---
-
-        /**
-         * Fire property change according document one.
-         */
-        protected void firePropertyChange(final String newText) {
-            java.beans.PropertyChangeEvent event = null;
-
-            synchronized (this) {
-                event = new java.beans.
-                    PropertyChangeEvent(this.component, "text", 
-                                        this.text, newText);
-                
-                this.text = newText;
-            } // end of sync
-
-            for (final java.beans.PropertyChangeListener l : this.component.
-                     getPropertyChangeListeners()) {
-
-                l.propertyChange(event);
-            } // end of for
-        } // end of firePropertyChange
-    } // end of class ConvertedTextEventListener
-
-    /**
-     * Listener for text event - converted as property change event.
-     */
-    private final class BindingTextListener 
-        extends ConvertedTextEventListener<TextComponent>  
-        implements java.awt.event.TextListener {
-
-        // --- Constructors ---
-
-        /**
-         * Bulk constructor.
-         *
-         * @param component Observed text component
-         */
-        BindingTextListener(final TextComponent component, 
-                            final BindingOptionMap options) {
-
-            super(component, component.getText(), options);
-        } // end of <init>
-
-        // ---
-
-        /**
-         * {@inheritDoc}
-         */
-        public void textValueChanged(java.awt.event.TextEvent e) {
-            firePropertyChange(this.component.getText());
-        } // end of textValueChanged
-    } // end of class BindingTextListener
-
-    /**
-     * Listener for document event - converted as property change event.
-     */
-    private final class BindingDocumentListener 
-        extends ConvertedTextEventListener<JTextComponent> 
-        implements javax.swing.event.DocumentListener {
-
-        // --- Constructors ---
-
-        /**
-         * Bulk constructor.
-         *
-         * @param component Observed text component
-         */
-        BindingDocumentListener(final JTextComponent component, 
-                                final BindingOptionMap options) {
-
-            super(component, component.getText(), options);
-        } // end of <init>
-
-        // ---
-
-        /**
-         * {@inheritDoc}
-         */
-        public void insertUpdate(javax.swing.event.DocumentEvent e) {
-            firePropertyChange(this.component.getText());
-        } // end of insertUpdate
-
-        /**
-         * {@inheritDoc}
-         */
-        public void removeUpdate(javax.swing.event.DocumentEvent e) {
-            firePropertyChange(this.component.getText());
-        } // end of removeUpdate
-
-        /**
-         * {@inheritDoc}
-         */
-        public void changedUpdate(javax.swing.event.DocumentEvent e) {
-            firePropertyChange(this.component.getText());
-        } // end of changedUpdate
-    } // end of BindingDocumentListener
+        return list;
+    } // end of addListener
 } // end of class BindingPostAddListenerHook
