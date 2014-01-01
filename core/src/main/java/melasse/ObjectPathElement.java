@@ -375,8 +375,7 @@ class ObjectPathElement implements PropertyChangeListener {
 
 	final Object target = this.objectRef.get();
 
-	this.logger.log(Level.FINER, 
-			"registry = {0}", registry);
+	this.logger.log(Level.FINER, "registry = {0}", registry);
 
 	synchronized(this.addedListeners) {
 	    // should have been cleared before
@@ -385,9 +384,8 @@ class ObjectPathElement implements PropertyChangeListener {
 	    for (final BindingListenerCategory cat : registry.keySet()) {
 		rl = registry.get(cat);
 
-		this.logger.log(Level.FINER,
-				"category = {0} -> {1}",
-				new Object[] { cat, rl });
+		this.logger.log(Level.FINER, "category = {0} -> {1}", 
+                                new Object[] { cat, rl });
 
 		for (final Object l : rl) {
 		    Binder.addListener(target, cat, l, this.options);
@@ -405,9 +403,7 @@ class ObjectPathElement implements PropertyChangeListener {
 		    } // end of sync
 		} // end of else
 
-		this.logger.log(Level.FINER, 
-				"category listeners = {0}", list);
-
+		this.logger.log(Level.FINER, "category listeners = {0}", list);
 	    } // end of for
 	} // end of sync
     } // end of pushListenerRegistry

@@ -213,6 +213,10 @@ Way bindings are set up can be configured providing options, as firth argument o
 
 - `melasse.swing.TableModel`: Change support for properties `rowCount`, `columnCount`, `dataVector`, using new method `.willChange()`.
 
+## AWT/Swing utility
+
+- melasse.QuietWrapAction
+
 ## Usage
 
 Melasse can be used in Maven or SBT project using Applicius repository.

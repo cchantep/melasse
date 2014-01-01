@@ -435,8 +435,7 @@ public class Binder {
 
         final Logger logger = getLogger(options);
         
-        logger.log(Level.FINER,
-                   "object = {0}, category = {1}, listener = {2}",
+        logger.log(Level.FINER, "object = {0}, category = {1}, listener = {2}",
                    new Object[] { object, category, listener });
 
         final Class objectClass = object.getClass();
