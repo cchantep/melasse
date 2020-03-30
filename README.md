@@ -2,7 +2,7 @@
 
 Melasse *glue* framework.
 
-[![Build Status](https://secure.travis-ci.org/cchantep/melasse.png?branch=master)](http://travis-ci.org/cchantep/melasse)
+[![CircleCI](https://circleci.com/gh/cchantep/melasse.svg?style=svg)](https://circleci.com/gh/cchantep/melasse)
 
 ## Examples
 
